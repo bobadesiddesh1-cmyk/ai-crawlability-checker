@@ -147,6 +147,31 @@ export function buildReportHtml(result, framework) {
   .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
   .kpi b { display: block; font-size: 22px; line-height: 1.2; }
   .kpi span { color: var(--muted); font-size: 12px; }
+  /* The summary. Not another red block — the banners under it are the evidence. */
+  .page-verdict {
+    background: var(--card); border: 1px solid var(--line); border-left-width: 4px;
+    border-radius: 8px; padding: 14px 16px; margin: 16px 0;
+  }
+  .page-verdict .kicker {
+    display: block; font-size: 10px; font-weight: 700; letter-spacing: .09em;
+    text-transform: uppercase; margin-bottom: 5px;
+  }
+  .page-verdict strong { display: block; font-size: 17px; letter-spacing: -.012em; margin-bottom: 5px; }
+  .page-verdict p { margin: 0; }
+
+  ul.gates { list-style: none; margin: 10px 0 0; padding: 0; }
+  .gate { display: flex; gap: 9px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 12.5px; }
+  .gate:first-child { border-top: 0; }
+  .gate.skip { opacity: .55; }
+  .gate .g {
+    flex: none; width: 16px; height: 16px; margin-top: 1px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 10px; font-weight: 700; line-height: 1;
+  }
+  .g.pass { background: var(--greenbg); color: var(--green); }
+  .g.fail { background: var(--redbg); color: var(--red); }
+  .g.warn { background: var(--amberbg); color: var(--amber); }
+  .g.skip { background: var(--card); color: var(--muted); border: 1px solid var(--line); }
+  .gate b { font-weight: 650; }
   ul.blocks { margin: 6px 0 0; padding-left: 18px; }
   ul.blocks li { margin-bottom: 5px; font-size: 13px; }
   ul.blocks .tag { color: var(--muted); font-size: 11px; text-transform: uppercase; margin-right: 6px; }
@@ -164,9 +189,11 @@ export function buildReportHtml(result, framework) {
     Checked ${esc(humanDate(result.checkedAt))} — generated locally by AI Crawlability Lens. No data left the browser.
   </div>
 
+  ${renderPageVerdict(result.pageVerdict)}
   ${renderKpis(result, bots)}
   ${renderCriticalBanner(blockedBots, blockedTokens, serverBlocked)}
   ${renderCloakingBanner(result.cloaking)}
+  ${renderDiagnosis(bots)}
 
   <h2>Per-bot results</h2>
   <div class="scroll">
@@ -229,6 +256,64 @@ function renderKpis(result, bots) {
     <div class="kpi"><b>${aiLowest === null ? 'n/a' : aiLowest}</b><span>Lowest AI-crawler score</span></div>
     <div class="kpi"><b>${blocked}</b><span>Bots blocked in robots.txt</span></div>
   </div>`;
+}
+
+/**
+ * The one-sentence answer, at the very top. Everything after it is evidence.
+ *
+ * @param {Object|null} v
+ * @returns {string}
+ */
+function renderPageVerdict(v) {
+  if (!v) return '';
+  const edge = v.severity === 'good' ? 'var(--green)' : v.severity === 'warn' ? 'var(--amber)' : 'var(--red)';
+  return `<div class="page-verdict" style="border-left-color:${edge}">
+    <span class="kicker" style="color:${edge}">Verdict</span>
+    <strong>${esc(v.headline)}</strong>
+    <p class="muted">${esc(v.detail)}</p>
+  </div>`;
+}
+
+/** Glyph per gate state — shape as well as colour, so it survives printing. */
+const GATE_GLYPH = { pass: '✓', fail: '✕', warn: '!', skip: '·' };
+
+/**
+ * Per-bot diagnosis: why each crawler can or cannot read the page, with the
+ * gate chain that produced the answer.
+ *
+ * @param {Object[]} bots
+ * @returns {string}
+ */
+function renderDiagnosis(bots) {
+  const withVerdict = bots.filter((b) => b.verdict);
+  if (!withVerdict.length) return '';
+
+  return `<h2>Why each bot can or cannot read this page</h2>
+    <p class="muted">Crawlability is a sequence of gates a request has to pass, and only the first
+    failure is the cause. The gates below are listed in the order a real request meets them.</p>
+    ${withVerdict
+      .map((b) => {
+        const cls = b.verdict.severity === 'good' ? 'good' : b.verdict.severity === 'warn' ? 'amber' : 'red';
+        return `<div class="card">
+          <h3 style="margin-top:0">
+            ${esc(b.label)} <span class="pill ${cls}">${esc(b.verdict.summary)}</span>
+          </h3>
+          <p><strong>${esc(b.verdict.headline)}</strong></p>
+          <p class="muted">${esc(b.verdict.because)}</p>
+          ${b.verdict.fix ? `<p><strong>Fix:</strong> ${esc(b.verdict.fix)}</p>` : ''}
+          <ul class="gates">
+            ${b.verdict.gates
+              .map(
+                (g) => `<li class="gate ${g.state}">
+                  <span class="g ${g.state}">${GATE_GLYPH[g.state] || '·'}</span>
+                  <span><b>${esc(g.label)}</b> ${esc(g.detail)}</span>
+                </li>`
+              )
+              .join('')}
+          </ul>
+        </div>`;
+      })
+      .join('\n')}`;
 }
 
 function renderCriticalBanner(blockedBots, blockedTokens, serverBlocked) {

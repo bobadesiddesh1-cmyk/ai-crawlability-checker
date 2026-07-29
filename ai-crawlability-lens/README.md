@@ -62,7 +62,8 @@ here (no TTFB, FCP or LCP) and no framework fingerprint database.
 Three things here exist nowhere else:
 
 1. **Per-AI-bot raw-fetch visibility** — the page fetched as each crawler, with a real
-   User-Agent, and diffed against what you see.
+   User-Agent, and diffed against what you see — plus a plain-English verdict on *why*
+   each one can or cannot read it.
 2. **robots.txt bot-blocking detection** — including `Google-Extended`, the token
    almost nobody knows about.
 3. **Cloaking detection between bots** — whether your infrastructure quietly serves
@@ -185,7 +186,49 @@ A rendered block counts as **visible** to a bot when either:
 Blocks with fewer than 4 tokens require an exact match; at 3 tokens, "80% overlap" is
 2 words out of 3, which matches unrelated text constantly.
 
-### 4. Visibility Score
+### 4. Why each bot can — or can't — read the page
+
+A score tells you *what*. The verdict engine tells you *why*, because the fix is
+completely different depending on which gate failed.
+
+Crawlability is a sequence of gates a request has to pass, and **only the first
+failure is the cause**:
+
+| # | Gate | Failing here means |
+|---|---|---|
+| 1 | **Allowed by robots.txt** | The bot never sends a request. Rendering is irrelevant — fix robots.txt. |
+| 2 | **Server responds** | The bot was refused. A firewall/CDN/WAF rule, not a rendering problem. |
+| 3 | **Response is HTML** | Warning: crawlers may not extract text from this content type. |
+| 4 | **Content present without JavaScript** | The content is not in the server's response. |
+| 5 | **Runs JavaScript** | Whether the bot can recover what's missing at gate 4. |
+
+Gates after the first failure are marked *skipped*, not *failed* — they were
+never reached, and marking them failed would invent evidence.
+
+**Gate 5 is a modifier, not a blocker** — and that is the whole point. The same
+page with the same score is:
+
+> **Googlebot** — *At the mercy of rendering.* "Can reach this page, but most of it
+> only appears after JavaScript runs… it will probably catch up, but on a delayed
+> budget it does not publish and does not guarantee."
+
+> **ClaudeBot** — *Reaches it, cannot read it.* "Nothing is blocking the request.
+> The problem is that only 24% of the content exists in that response… and this
+> crawler does not run JavaScript. To it, this page is close to empty."
+
+One measurement, two verdicts, because the crawlers differ.
+
+Each verdict carries a decisive reason and a fix — except a clean pass, which
+carries no fix, because a page that is fine should not be handed busywork. A
+page-level verdict sits above everything and names the most urgent cause first:
+access problems outrank rendering problems, because rendering changes do nothing
+for a bot that never sends a request.
+
+The "this refusal is specific to your User-Agent" claim is only made when the
+plain-UA baseline got a 200. If the baseline was refused too, the site is
+blocking everything, and saying otherwise would be a fabricated finding.
+
+### 5. Visibility Score
 
 ```
 Score = (sum of weights of visible blocks / sum of weights of all blocks) × 100
@@ -201,7 +244,7 @@ Colour bands: **red < 40**, **amber 40–75**, **green > 75**. Exactly 40 and ex
 are both amber. A page with no content blocks scores `n/a`, never `0` — a zero on an
 empty page reads as catastrophic when it just means there is nothing to measure.
 
-### 5. Cloaking detection
+### 6. Cloaking detection
 
 The **Generic non-JS bot** row is a plain browser User-Agent carrying no crawler token.
 It is the control: any divergence between a named bot's raw HTML and the control's is by
@@ -225,7 +268,7 @@ When nothing is found, that is stated explicitly ("No cloaking detected — all 
 receive the same raw HTML"), because a silent absence of a warning is indistinguishable
 from a check that never ran.
 
-### 6. Framework recommendations
+### 7. Framework recommendations
 
 Roughly 15 signals — `meta generator`, `window.__NEXT_DATA__`, `window.__NUXT__`,
 `self.__next_f`, `window.__remixContext`, `[ng-version]`, React/Vue root markers, bundle
@@ -304,7 +347,7 @@ blocked, redirected or upgraded.
 ## Acceptance tests
 
 Verified against real Chromium (Playwright, `--load-extension`), not just reasoned
-about — 132 assertions across three suites, all passing. The suites live in
+about — 184 assertions across three suites, all passing. The suites live in
 [`../tests/`](../tests) and are not part of the extension package.
 
 | # | Test | Result |
@@ -315,6 +358,9 @@ about — 132 assertions across three suites, all passing. The suites live in
 | 4 | Fetches are sequential, never parallel | Exactly one page request per bot, arriving strictly in order — no rule-swap race |
 | 5 | The DNR rule is torn down | Zero dynamic rules at rest, and zero again after a completed run |
 | 6 | `Disallow: /` for GPTBot → CRITICAL | GPTBot reported disallowed with the matching rule, shown as a CRITICAL banner above the table, and given **no score** rather than a misleading one |
+| 6a | Verdict gate chain | The first failing gate is the cause; later gates read *skipped*, not failed. A robots.txt block outranks a low score, and its fix points at robots.txt rather than the frontend |
+| 6b | Same page, two verdicts | Score 24 is *warning / "at the mercy of rendering"* for Googlebot and *critical / "reaches it, cannot read it"* for ClaudeBot |
+| 6c | No fabricated findings | "This refusal is specific to your User-Agent" is only claimed when the plain-UA baseline got a 200 |
 | 7 | `Google-Extended` disallowed separately from Googlebot | Googlebot allowed, Google-Extended disallowed, both reported, with the distinction explained in its own banner |
 | 8 | Server returns 403 to one bot | PerplexityBot reads as **Blocked (403)**, distinct from a low Visibility Score, and other bots are unaffected |
 | 9 | Heavily client-rendered content | Exactly the JS-injected blocks are reported invisible; `DOMParser` provably did not execute the page script |
@@ -385,7 +431,7 @@ ai-crawlability-lens/
 └── README.md
 ```
 
-`engine/robots-parser.js`, `engine/diff.js` and `engine/cloaking.js` are pure functions
+`engine/robots-parser.js`, `engine/diff.js`, `engine/cloaking.js` and `engine/verdict.js` are pure functions
 with no DOM or network dependency — they can be reasoned about, and tested, in isolation.
 
 **Maintenance note:** User-Agent strings drift. They live in one file,

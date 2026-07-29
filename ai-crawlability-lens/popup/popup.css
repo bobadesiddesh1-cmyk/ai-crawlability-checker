@@ -181,6 +181,59 @@ table.bots tr:last-child td { border-bottom: 0; }
 .dot.green { background: #16a34a; }
 .dot.none { background: #9ca3af; }
 
+/* -------------------------------------------------------------- verdict */
+
+/* The page-level answer. Deliberately NOT another red block — it is the
+   summary, and the banners beneath it are the evidence. A neutral card with a
+   severity-coloured edge keeps that hierarchy legible. */
+.page-verdict {
+  background: var(--card);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--muted);
+  border-radius: 7px;
+  padding: 10px 13px;
+  margin-bottom: 10px;
+}
+.page-verdict.good { border-left-color: #16a34a; }
+.page-verdict.warn { border-left-color: #d97706; }
+.page-verdict.critical { border-left-color: #dc2626; }
+.page-verdict .kicker {
+  display: block; font-size: 9.5px; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; margin-bottom: 4px;
+}
+.page-verdict.good .kicker { color: var(--green); }
+.page-verdict.warn .kicker { color: var(--amber); }
+.page-verdict.critical .kicker { color: var(--red); }
+.page-verdict b { display: block; font-size: 13px; margin-bottom: 4px; }
+.page-verdict p { margin: 0; font-size: 12px; color: var(--muted); }
+
+.verdict { border-radius: 7px; padding: 10px 12px; font-size: 12px; }
+.verdict.good { background: var(--green-bg); color: var(--green); }
+.verdict.warn { background: var(--amber-bg); color: var(--amber); }
+.verdict.critical { background: var(--red-bg); color: var(--red); }
+.verdict b { display: block; margin-bottom: 4px; }
+.verdict p { margin: 0; }
+.verdict p + p { margin-top: 6px; }
+.verdict .fix { font-weight: 600; }
+.verdict .fix::before { content: "Fix: "; font-weight: 700; }
+
+/* The gate chain: the ordered sequence a real request has to pass. */
+.gates { list-style: none; margin: 10px 0 0; padding: 0; }
+.gate { display: flex; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 11.5px; }
+.gate:first-child { border-top: 0; }
+.gate.is-skip { opacity: .55; }
+.gate .g {
+  flex: none; width: 15px; height: 15px; margin-top: 1px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 9px; font-weight: 700; line-height: 1;
+}
+.g.pass { background: var(--green-bg); color: var(--green); }
+.g.fail { background: var(--red-bg); color: var(--red); }
+.g.warn { background: var(--amber-bg); color: var(--amber); }
+.g.skip { background: var(--card); color: var(--muted); border: 1px solid var(--line); }
+.gate b { display: block; font-weight: 600; }
+.gate span { color: var(--muted); }
+
 /* --------------------------------------------------------------- detail */
 
 .detail { margin-top: 10px; }

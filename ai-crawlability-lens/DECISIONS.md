@@ -235,6 +235,67 @@ content to measure".
 
 ---
 
+## 6a. The verdict engine — *why*, not just *what*
+
+**Decision:** A separate pure module, `engine/verdict.js`, turns the per-bot
+measurements into a plain-English answer to "why can this crawler read my page,
+or why can't it?" — evaluated as an ordered **gate chain**, not a score.
+
+**Why a chain and not a number:** crawlability is a sequence of gates a request
+has to pass, and **only the first failure is the cause**. A page can be both
+disallowed in robots.txt *and* entirely client-rendered. Reporting those as two
+equal findings sends someone off to rewrite their frontend when the actual fix is
+one line of `robots.txt`. So the gates are evaluated in the order a real request
+meets them:
+
+| # | Gate | Failing here means |
+|---|---|---|
+| 1 | Allowed by robots.txt | The bot never sends a request. Rendering is irrelevant. |
+| 2 | Server responds | The bot was refused. A firewall/WAF problem, not a rendering one. |
+| 3 | Response is HTML | A warning — crawlers may not extract text from it. |
+| 4 | Content present without JavaScript | The content is not in the server's response. |
+| 5 | Runs JavaScript | Modifier, not a blocker (see below). |
+
+Gates after the first failure are marked `skip`, not `fail` — they were never
+reached, and marking them failed would invent evidence.
+
+**Decision:** Gate 5 is a modifier rather than a gate that can fail the verdict.
+
+**Why:** it is the whole thesis of the tool. The *same* page with the *same*
+score is `partial` / warning for Googlebot ("will probably catch up, on a budget
+it does not publish") and `not-crawlable` / critical for ClaudeBot ("missing
+permanently"). One measurement, two verdicts, because the crawlers differ. A
+single severity for both would erase the distinction the product exists to draw.
+
+**Decision:** The "user-agent-specific" claim in a server-block verdict is only
+made when the plain-UA baseline got a 200.
+
+**Why:** if the baseline was also refused, the site is down or blocking
+everything, and saying "this refusal is specific to GPTBot" would be a fabricated
+finding. The verdict function takes the baseline outcome as explicit context
+rather than guessing.
+
+**Decision:** Every verdict carries a `fix`, except the `crawlable` case, which
+carries `null`.
+
+**Why:** a finding without a next action is a complaint. And a page that is fine
+should not be handed busywork — an empty fix field is the honest output there.
+
+**Decision:** The page-level verdict is styled as a neutral card with a
+severity-coloured edge, *not* as another red banner.
+
+**Why:** it is the summary, and the CRITICAL banners beneath it are the evidence.
+When both were red blocks the popup was a wall of red with no hierarchy and the
+answer was indistinguishable from its own supporting detail.
+
+**Decision:** Once the verdict card existed, the older "No score is shown
+because…" hint and the overlay panel's duplicate warning were removed.
+
+**Why:** they said the same thing less well. Two explanations of one fact read as
+two facts.
+
+---
+
 ## 7. Cloaking detection
 
 **Decision:** Compare each bot's raw block set against the **Generic non-JS bot**

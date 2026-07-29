@@ -57,7 +57,7 @@ const out = await driver.evaluate(async ({url,files}) => {
   const [fw] = await chrome.scripting.executeScript({target:{tabId}, files:['content/framework-detect.js'], world:'MAIN'});
   const res = await chrome.tabs.sendMessage(tabId, {type:'AICL_RUN', url});
   return {res, framework: fw && fw.result};
-}, {url:`${ORIGIN}/`, files:['engine/html-extractor.js','engine/diff.js','engine/cloaking.js','content/capture-blocks.js','content/overlay.js','content/main.js']});
+}, {url:`${ORIGIN}/`, files:['engine/html-extractor.js','engine/diff.js','engine/cloaking.js','engine/verdict.js','content/capture-blocks.js','content/overlay.js','content/main.js']});
 
 is(out.res.ok, true, 'analysis produced');
 const html = buildReportHtml(out.res.result, out.framework);
@@ -79,7 +79,8 @@ await rp.goto('file://'+file, {waitUntil:'load'});
 is(errs, [], 'report opens with zero errors');
 is(external, [], 'report makes zero network requests when opened');
 const text = await rp.locator('body').innerText();
-for (const needle of ['AI Crawlability report','CRITICAL — blocked in robots.txt','GPTBot',
+for (const needle of ['AI Crawlability report','Why each bot can or cannot read this page',
+                      'is not allowed to crawl this page','turned away by your server','CRITICAL — blocked in robots.txt','GPTBot',
                       'Google-Extended is not Googlebot','Per-bot results','Content invisible to bots',
                       'Injected paragraph that no non-JS crawler will ever see','Framework and recommendation',
                       'Methodology','Privacy']) {

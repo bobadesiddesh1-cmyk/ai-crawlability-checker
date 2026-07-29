@@ -265,7 +265,7 @@ const analysis = await driver.evaluate(async ({ tabId, url, files }) => {
   tabId: targetId,
   url: `${ORIGIN}/`,
   files: [
-    'engine/html-extractor.js', 'engine/diff.js', 'engine/cloaking.js',
+    'engine/html-extractor.js', 'engine/diff.js', 'engine/cloaking.js', 'engine/verdict.js',
     'content/capture-blocks.js', 'content/overlay.js', 'content/main.js'
   ]
 });
@@ -308,6 +308,31 @@ is(A.cloaking.skipped.map((s) => s.botId), ['perplexitybot'], 'the 403 bot is sk
 
 is(analysis.framework && analysis.framework.id, 'unknown', 'framework detection ran in the MAIN world and returned a bucket');
 
+/* --- why each bot can or cannot read the page --------------------------- */
+const gs = (v, id) => v.gates.find((g) => g.id === id).state;
+
+is(A.perBot.gptbot.verdict.state, 'blocked-robots', 'GPTBot verdict: blocked before it even asks');
+is(gs(A.perBot.gptbot.verdict, 'robots'), 'fail', 'the robots gate is the one that failed');
+is(gs(A.perBot.gptbot.verdict, 'served'), 'skip', 'and the later gates were never reached');
+is(A.perBot.gptbot.verdict.because.includes('Disallow: /'), true, 'quoting the actual blocking rule');
+
+is(A.perBot.perplexitybot.verdict.state, 'blocked-server', 'PerplexityBot verdict: refused by the server');
+is(
+  A.perBot.perplexitybot.verdict.because.includes('specific to this bot'),
+  true,
+  'and identified as user-agent-specific, because the baseline got a 200'
+);
+
+// The fixture is mostly server-rendered, so the readable bots should say so.
+is(A.perBot.generic.verdict.state, 'crawlable', 'the baseline can read the mostly-server-rendered fixture');
+is(A.perBot.generic.verdict.severity, 'good', 'reported as good');
+is(A.perBot.generic.verdict.fix, null, 'with nothing to fix');
+is(gs(A.perBot.generic.verdict, 'js'), 'fail', 'while still recording that it cannot run JavaScript');
+
+is(typeof A.pageVerdict.headline, 'string', 'a page-level verdict is produced');
+is(A.pageVerdict.severity, 'critical', 'critical, because two bots cannot reach the page at all');
+is(A.pageVerdict.headline.includes('GPTBot'), true, 'naming the bots that cannot reach it');
+
 await ctxB.close();
 server.close();
 
@@ -317,7 +342,7 @@ server.close();
 console.log('\nC. engine against a real DOM / D. overlay purity');
 
 const files = [
-  'engine/html-extractor.js', 'engine/diff.js', 'engine/cloaking.js',
+  'engine/html-extractor.js', 'engine/diff.js', 'engine/cloaking.js', 'engine/verdict.js',
   'content/capture-blocks.js', 'content/overlay.js'
 ].map((f) => readFileSync(join(EXT, f), 'utf8'));
 

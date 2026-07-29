@@ -29,6 +29,7 @@ const CONTENT_FILES = [
   'engine/html-extractor.js',
   'engine/diff.js',
   'engine/cloaking.js',
+  'engine/verdict.js',
   'content/capture-blocks.js',
   'content/overlay.js',
   'content/main.js'
@@ -311,6 +312,21 @@ function renderBanners() {
   const r = state.result;
   ui.banners.textContent = '';
 
+  // The answer first. Everything below this is the evidence for it.
+  if (r.pageVerdict) {
+    const v = document.createElement('div');
+    v.className = `page-verdict ${r.pageVerdict.severity}`;
+    const kicker = document.createElement('span');
+    kicker.className = 'kicker';
+    kicker.textContent = 'Verdict';
+    const b = document.createElement('b');
+    b.textContent = r.pageVerdict.headline;
+    const p = document.createElement('p');
+    p.textContent = r.pageVerdict.detail;
+    v.append(kicker, b, p);
+    ui.banners.appendChild(v);
+  }
+
   const blockedBots = r.order.map((id) => r.perBot[id]).filter((b) => b && b.robotsBlocked);
   const blockedTokens = Object.values(r.robots.tokenVerdicts || {}).filter((t) => t && !t.allowed);
   const serverBlocked = r.order.map((id) => r.perBot[id]).filter((b) => b && b.status === 'blocked');
@@ -499,6 +515,16 @@ function renderBotDetail() {
   ui.botDetail.textContent = '';
   if (!b) return;
 
+  // Why this bot can or cannot read the page, and the gate chain behind it.
+  if (b.verdict) {
+    ui.botDetail.appendChild(renderVerdict(b.verdict));
+    const hr = document.createElement('p');
+    hr.className = 'hint';
+    hr.textContent = 'Measurements';
+    hr.style.marginBottom = '2px';
+    ui.botDetail.appendChild(hr);
+  }
+
   const add = (label, value) => {
     const row = document.createElement('div');
     row.className = 'stat-row';
@@ -516,22 +542,18 @@ function renderBotDetail() {
   add('Raw HTML size', `${formatBytes(b.byteLength)}`);
   add('Fetch time', `${b.elapsedMs} ms`);
 
-  if (b.statusDetail) {
+  // Anything the verdict does not already cover: an off-origin redirect, a
+  // truncated body, a non-HTML Content-Type.
+  const extra = supplementaryNotes(b);
+  if (extra) {
     const note = document.createElement('div');
     note.className = 'notice warn';
-    note.textContent = b.statusDetail;
+    note.textContent = extra;
     ui.botDetail.appendChild(note);
   }
 
-  if (!b.scoreMeaningful) {
-    const note = document.createElement('p');
-    note.className = 'hint';
-    note.textContent = b.robotsBlocked
-      ? 'No score is shown because this bot is disallowed in robots.txt — it never fetches the page, so there is no rendering question to answer.'
-      : 'No score is shown because this bot did not receive a normal response. That is a blocking finding, not a rendering finding.';
-    ui.botDetail.appendChild(note);
-    return;
-  }
+  // The verdict above already explains why there is no score.
+  if (!b.scoreMeaningful) return;
 
   if (b.invisibleBlocks.length === 0) {
     const good = document.createElement('div');
@@ -564,6 +586,82 @@ function renderBotDetail() {
     more.textContent = `Showing the first ${b.invisibleBlocks.length} of ${b.invisibleCount}.`;
     ui.botDetail.appendChild(more);
   }
+}
+
+/**
+ * Caveats about the fetch itself that the verdict's gate chain does not carry.
+ *
+ * @param {Object} b
+ * @returns {string}
+ */
+function supplementaryNotes(b) {
+  const parts = [];
+  if (b.redirectedCrossOrigin) {
+    parts.push(
+      `Redirected off-origin to ${b.finalUrl} — the spoofed User-Agent is not carried across origins, ` +
+        'so this row reflects the redirect target fetched as a normal browser.'
+    );
+  }
+  if (b.truncated) parts.push('The response body was very large and was truncated before analysis.');
+  return parts.join(' ');
+}
+
+/** Glyph per gate state. Shape as well as colour, so it survives a screenshot. */
+const GATE_GLYPH = { pass: '✓', fail: '✕', warn: '!', skip: '·' };
+
+/**
+ * The verdict card: the answer, the reason, the fix, then the gate chain that
+ * produced it — in the order a real request meets those gates.
+ *
+ * @param {Object} verdict
+ * @returns {HTMLElement}
+ */
+function renderVerdict(verdict) {
+  const wrap = document.createElement('div');
+
+  const card = document.createElement('div');
+  card.className = `verdict ${verdict.severity}`;
+
+  const head = document.createElement('b');
+  head.textContent = verdict.headline;
+  card.appendChild(head);
+
+  const why = document.createElement('p');
+  why.textContent = verdict.because;
+  card.appendChild(why);
+
+  if (verdict.fix) {
+    const fix = document.createElement('p');
+    fix.className = 'fix';
+    fix.textContent = verdict.fix;
+    card.appendChild(fix);
+  }
+  wrap.appendChild(card);
+
+  const list = document.createElement('ul');
+  list.className = 'gates';
+  for (const g of verdict.gates) {
+    const li = document.createElement('li');
+    li.className = 'gate' + (g.state === 'skip' ? ' is-skip' : '');
+
+    const glyph = document.createElement('span');
+    glyph.className = `g ${g.state}`;
+    glyph.textContent = GATE_GLYPH[g.state] || '·';
+    glyph.setAttribute('aria-hidden', 'true');
+
+    const text = document.createElement('div');
+    const label = document.createElement('b');
+    label.textContent = g.label;
+    const detail = document.createElement('span');
+    detail.textContent = g.detail;
+    text.append(label, detail);
+
+    li.append(glyph, text);
+    list.appendChild(li);
+  }
+  wrap.appendChild(list);
+
+  return wrap;
 }
 
 function renderFramework() {

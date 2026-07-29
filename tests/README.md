@@ -24,7 +24,7 @@ extensions.
 
 ## What each suite covers
 
-### `engines.test.mjs` — 42 assertions, no browser
+### `engines.test.mjs` — 78 assertions, no browser
 
 The pure engines, in Node:
 
@@ -40,8 +40,14 @@ The pure engines, in Node:
 - **cloaking engine** — identical content, genuinely divergent content, reordering not
   being flagged, the 15% threshold boundary, and a 403 being excluded from the
   comparison but reported as skipped.
+- **verdict engine** — gate ordering (a robots.txt block outranks a low score, and
+  points the fix at robots.txt), gates after the first failure reading `skip` rather
+  than `fail`, the same score producing a *warning* for a JS-rendering crawler and a
+  *critical* for one that does not render, the "user-agent-specific refusal" claim only
+  being made when the baseline got a 200, band boundaries, and the page-level summary
+  naming the most urgent cause first.
 
-### `browser.test.mjs` — 72 assertions, real Chromium
+### `browser.test.mjs` — 85 assertions, real Chromium
 
 Loads the shipped extension unpacked, then runs a full end-to-end check against a local
 HTTP server that echoes the received `User-Agent` back into the page body.
@@ -57,7 +63,7 @@ score, `Google-Extended` evaluated separately from `Googlebot`, a 403 reading as
 HTML, `DOMParser` provably not executing page scripts, and the overlay leaving
 `document.body.outerHTML` byte-identical before, during and after.
 
-### `report.test.mjs` — 18 assertions, real Chromium
+### `report.test.mjs` — 21 assertions, real Chromium
 
 Builds the export report from a real analysis result, opens it from `file://`, and
 asserts it renders with zero errors, makes **zero network requests**, contains no

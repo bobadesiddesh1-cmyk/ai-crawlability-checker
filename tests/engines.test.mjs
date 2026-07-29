@@ -13,7 +13,8 @@ globalThis.self = globalThis;
 const ROOT = fileURLToPath(new URL('../ai-crawlability-lens', import.meta.url));
 new Function(readFileSync(`${ROOT}/engine/diff.js`, 'utf8'))();
 new Function(readFileSync(`${ROOT}/engine/cloaking.js`, 'utf8'))();
-const { diff, cloaking } = globalThis.AICL;
+new Function(readFileSync(`${ROOT}/engine/verdict.js`, 'utf8'))();
+const { diff, cloaking, verdict } = globalThis.AICL;
 
 let pass = 0, fail = 0;
 function is(actual, expected, label) {
@@ -198,6 +199,125 @@ const cBlocked = cloaking.detectCloaking(
 );
 is(cBlocked.detected, false, 'a 403 is excluded from the cloaking comparison');
 is(cBlocked.skipped.length, 1, 'the 403 bot is reported as skipped, not silently dropped');
+
+/* ----------------------------------------------------------------- verdict */
+console.log('\nverdict engine');
+
+// A bot is a per-bot entry as content/main.js assembles it.
+const bot = (over) => Object.assign({
+  label: 'ClaudeBot', executesJs: false, isBaseline: false,
+  robotsBlocked: false, robotsRule: 'Allow: /', robotsGroup: '*',
+  status: 'ok', httpStatus: 200, contentType: 'text/html', error: null,
+  score: 90, scoreMeaningful: true,
+  totalBlocks: 20, invisibleCount: 2, invisibleHeadings: 0, totalHeadings: 4
+}, over);
+
+const gateState = (v, id) => v.gates.find((g) => g.id === id).state;
+
+// Gate 1 wins outright: robots.txt is evaluated before anything else, and
+// everything downstream is never reached.
+const vRobots = verdict.buildVerdict(bot({
+  label: 'GPTBot', robotsBlocked: true, robotsRule: 'Disallow: /', robotsGroup: 'gptbot', score: null
+}));
+is(vRobots.state, 'blocked-robots', 'a robots.txt disallow is the verdict');
+is(vRobots.severity, 'critical', 'and it is critical');
+is(vRobots.headline, 'GPTBot is not allowed to crawl this page.', 'headline names the bot and the outcome');
+is(vRobots.because.includes('Disallow: /'), true, 'the blocking rule is quoted');
+is(gateState(vRobots, 'robots'), 'fail', 'the robots gate fails');
+is(['served', 'html', 'source', 'js'].map((g) => gateState(vRobots, g)),
+   ['skip', 'skip', 'skip', 'skip'], 'every later gate is skipped — it was never reached');
+
+// A robots block outranks a bad score: the fix is robots.txt, not the frontend.
+const vRobotsAndCsr = verdict.buildVerdict(bot({
+  label: 'GPTBot', robotsBlocked: true, robotsRule: 'Disallow: /', score: 4, invisibleCount: 19
+}));
+is(vRobotsAndCsr.state, 'blocked-robots', 'robots.txt outranks a low score');
+is(vRobotsAndCsr.fix.includes('Nothing else on this page needs to change'), true,
+   'and the fix points at robots.txt, not at rendering');
+
+// Gate 2: refused by the server.
+const vBlocked = verdict.buildVerdict(
+  bot({ label: 'PerplexityBot', status: 'blocked', httpStatus: 403, score: null }),
+  { baselineOk: true, baselineLabel: 'Generic non-JS bot' }
+);
+is(vBlocked.state, 'blocked-server', 'a 403 is a server-block verdict');
+is(vBlocked.because.includes('specific to this bot'), true,
+   'a 200 for the baseline makes the refusal user-agent-specific, and it says so');
+is(gateState(vBlocked, 'robots'), 'pass', 'robots passed before the server refused');
+is(gateState(vBlocked, 'source'), 'skip', 'content gate never reached');
+is(vBlocked.fix.includes('firewall'), true, 'the fix points at bot management, not rendering');
+
+// Without a baseline 200 we must not claim the block is UA-specific.
+const vBlockedNoBase = verdict.buildVerdict(
+  bot({ status: 'blocked', httpStatus: 403, score: null }), { baselineOk: false }
+);
+is(vBlockedNoBase.because.includes('specific to this bot'), false,
+   'no baseline 200 means no claim about it being user-agent-specific');
+
+// Gate 4 for a crawler that cannot recover: the decisive failure.
+const vCsr = verdict.buildVerdict(bot({ score: 24, invisibleCount: 13, invisibleHeadings: 3, totalBlocks: 17 }));
+is(vCsr.state, 'not-crawlable', 'a non-JS crawler on a client-rendered page cannot read it');
+is(vCsr.severity, 'critical', 'which is critical');
+is(vCsr.because.includes('Nothing is blocking the request'), true,
+   'and it says explicitly that access is not the problem');
+is(gateState(vCsr, 'source'), 'fail', 'the content gate is what failed');
+is(gateState(vCsr, 'js'), 'fail', 'and no JavaScript execution to recover it');
+
+// Same page, but a crawler that renders: a risk, not a verdict.
+const vCsrJs = verdict.buildVerdict(bot({
+  label: 'Googlebot', executesJs: true, score: 24, invisibleCount: 13, invisibleHeadings: 3, totalBlocks: 17
+}));
+is(vCsrJs.state, 'partial', 'the same page is only "partial" for a JS-rendering crawler');
+is(vCsrJs.severity, 'warn', 'a warning, not a critical');
+is(vCsrJs.because.includes('will probably catch up'), true, 'and it is honest about the uncertainty');
+is(gateState(vCsrJs, 'js'), 'pass', 'the JavaScript gate passes for Googlebot');
+
+// A well server-rendered page.
+const vGood = verdict.buildVerdict(bot({ score: 96, invisibleCount: 1 }));
+is(vGood.state, 'crawlable', 'a server-rendered page is crawlable');
+is(vGood.severity, 'good', 'and reads as good');
+is(vGood.fix, null, 'with nothing to fix');
+is(vGood.because.includes('no JavaScript required'), true, 'and it says why it works, not just that it does');
+
+// Band boundaries.
+is([75, 74, 40, 39].map((s) => verdict.buildVerdict(bot({ score: s })).state),
+   ['crawlable', 'partial', 'partial', 'not-crawlable'], 'verdict bands line up with the score bands');
+
+// Non-HTML response is a warning, not a failure.
+const vXml = verdict.buildVerdict(bot({ contentType: 'application/json' }));
+is(gateState(vXml, 'html'), 'warn', 'a non-HTML Content-Type warns');
+
+// Page-level summary picks the most urgent cause.
+const withVerdicts = (list) => list.map((b) => {
+  const full = bot(b);
+  full.verdict = verdict.buildVerdict(full);
+  return full;
+});
+
+const sBlocked = verdict.summarisePage(withVerdicts([
+  { label: 'Googlebot', executesJs: true, score: 90 },
+  { label: 'GPTBot', robotsBlocked: true, robotsRule: 'Disallow: /', score: null },
+  { label: 'ClaudeBot', score: 90 }
+]));
+is(sBlocked.severity, 'critical', 'a blocked bot makes the page-level verdict critical');
+is(sBlocked.headline.includes('GPTBot'), true, 'and names it');
+is(sBlocked.detail.includes('Fix access first'), true, 'ordering the fixes correctly');
+
+const sCsr = verdict.summarisePage(withVerdicts([
+  { label: 'Googlebot', executesJs: true, score: 24 },
+  { label: 'GPTBot', score: 24 },
+  { label: 'ClaudeBot', score: 24 }
+]));
+is(sCsr.severity, 'critical', 'AI crawlers that cannot read the page is critical');
+is(sCsr.headline.includes('cannot read it'), true, 'and the headline says so plainly');
+
+const sFine = verdict.summarisePage(withVerdicts([
+  { label: 'Googlebot', executesJs: true, score: 98 },
+  { label: 'GPTBot', score: 98 },
+  { label: 'ClaudeBot', score: 98 }
+]));
+is(sFine.severity, 'good', 'a well server-rendered page reads as good');
+is(sFine.headline, 'Every AI crawler checked can reach and read this page.', 'stated plainly');
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

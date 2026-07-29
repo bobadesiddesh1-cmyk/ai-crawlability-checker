@@ -162,6 +162,14 @@
 
     .body { padding: 0 12px 12px; }
 
+    .verdict {
+      border-radius: 6px; padding: 8px 9px; margin-bottom: 8px;
+      font-size: 11.5px; font-weight: 600; line-height: 1.4;
+    }
+    .verdict.good { background: #dcfce7; color: #166534; }
+    .verdict.warn { background: #fef3c7; color: #92400e; }
+    .verdict.critical { background: #fee2e2; color: #991b1b; }
+
     .stat {
       display: flex; justify-content: space-between; gap: 10px;
       padding: 4px 0; border-top: 1px dashed #e5e7eb; font-size: 12px;
@@ -197,6 +205,9 @@
       .chip.none  { background: #374151; color: #e5e7eb; }
       .stat { border-top-color: #1f2937; }
       .legend, .msg { color: #9ca3af; }
+      .verdict.good { background: #14532d; color: #bbf7d0; }
+      .verdict.warn { background: #78350f; color: #fde68a; }
+      .verdict.critical { background: #7f1d1d; color: #fecaca; }
     }
   `;
 
@@ -367,6 +378,13 @@
     const entry = perBot[currentBotId];
 
     if (entry) {
+      // The answer first — the numbers below it are the evidence.
+      if (entry.verdictHeadline) {
+        const v = document.createElement('div');
+        v.className = 'verdict ' + (entry.verdictSeverity || 'warn');
+        v.textContent = entry.verdictHeadline;
+        body.appendChild(v);
+      }
       body.appendChild(stat('Visibility Score', entry.score === null ? 'n/a' : `${entry.score}/100`));
       body.appendChild(stat('Blocks invisible', `${entry.invisibleSet.size} of ${entry.totalBlocks}`));
       body.appendChild(stat('Headings invisible', `${entry.invisibleHeadings} of ${entry.totalHeadings}`));
@@ -378,18 +396,6 @@
         '<span><i class="swatch red"></i>Invisible</span><span><i class="swatch green"></i>Visible</span>';
       body.appendChild(legend);
 
-      if (entry.robotsBlocked) {
-        const msg = document.createElement('div');
-        msg.className = 'msg warn';
-        msg.textContent =
-          'Blocked in robots.txt — this bot never fetches the page at all, so the score above is academic.';
-        body.appendChild(msg);
-      } else if (entry.status !== 'ok') {
-        const msg = document.createElement('div');
-        msg.className = 'msg warn';
-        msg.textContent = entry.statusDetail || 'This bot did not receive a normal response.';
-        body.appendChild(msg);
-      }
     }
 
     const note = document.createElement('div');

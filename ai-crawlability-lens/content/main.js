@@ -191,10 +191,23 @@
       };
     }
 
-    // 4. Cloaking, against the plain-UA baseline.
+    // 4. Why can each bot read this page, or why can't it? The gate chain has
+    //    to run after every bot is measured, because "the server refused you
+    //    specifically" is only knowable once the plain-UA baseline is in.
+    const baseline = perBot[fetched.baselineBotId];
+    const verdictContext = {
+      baselineOk: !!baseline && baseline.status === 'ok',
+      baselineLabel: baseline ? baseline.label : 'the baseline'
+    };
+    for (const id of order) {
+      perBot[id].verdict = AICL.verdict.buildVerdict(perBot[id], verdictContext);
+    }
+    const pageVerdict = AICL.verdict.summarisePage(order.map((id) => perBot[id]));
+
+    // 5. Cloaking, against the plain-UA baseline.
     const cloaking = AICL.cloaking.detectCloaking(rawForCloaking, fetched.baselineBotId, botLabels);
 
-    // 5. Stash what the overlay needs. Elements cannot be serialised, so the
+    // 6. Stash what the overlay needs. Elements cannot be serialised, so the
     //    overlay reads them from AICL.state, not from a message.
     AICL.state.overlayData = {
       order,
@@ -216,7 +229,10 @@
               status: b.status,
               statusLabel: b.statusLabel,
               statusDetail: b.statusDetail,
-              robotsBlocked: b.robotsBlocked
+              robotsBlocked: b.robotsBlocked,
+              verdictHeadline: b.verdict.headline,
+              verdictSummary: b.verdict.summary,
+              verdictSeverity: b.verdict.severity
             }
           ];
         })
@@ -238,6 +254,7 @@
       robots: fetched.robots,
       order,
       perBot,
+      pageVerdict,
       cloaking,
       baselineBotId: fetched.baselineBotId,
       defaultBotId: AICL.state.overlayData.defaultBotId
