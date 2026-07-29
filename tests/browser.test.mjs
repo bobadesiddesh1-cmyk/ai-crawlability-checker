@@ -113,6 +113,52 @@ await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const PORT = server.address().port;
 const ORIGIN = `http://127.0.0.1:${PORT}`;
 
+/* --------------------------------------------------------------------------
+ * A second origin that rate-limits, for the 429 path.
+ *
+ * Two distinct behaviours, because they must produce different verdicts:
+ *   GPTBot    — limited once with a Retry-After, then let through. The retry
+ *               has to recover, and the honoured wait proves Retry-After is
+ *               actually parsed.
+ *   ClaudeBot — limited every time. This must end as "throttled", never
+ *               "blocked": 429 used to sit in BLOCKING_STATUSES, which turned
+ *               a rate limit into a CRITICAL claim about a WAF rule that does
+ *               not exist.
+ * ClaudeBot is 8th of 9 deliberately — an always-429 bot early in the list
+ * would back the pacer off for every bot after it and stretch the run.
+ * ------------------------------------------------------------------------ */
+const throttleHits = new Map();
+const throttleSeen = [];
+
+const throttleServer = createServer((req, res) => {
+  const ua = req.headers['user-agent'] || '';
+  throttleSeen.push({ url: req.url, ua, at: Date.now() });
+
+  if (req.url === '/robots.txt') {
+    res.writeHead(200, { 'content-type': 'text/plain' });
+    res.end('User-agent: *\nAllow: /\n');
+    return;
+  }
+
+  const who = /GPTBot/i.test(ua) ? 'gptbot' : /ClaudeBot/i.test(ua) ? 'claudebot' : 'other';
+  const n = (throttleHits.get(who) || 0) + 1;
+  throttleHits.set(who, n);
+
+  if ((who === 'gptbot' && n === 1) || who === 'claudebot') {
+    const headers = { 'content-type': 'text/html' };
+    if (who === 'gptbot') headers['retry-after'] = '1';
+    res.writeHead(429, headers);
+    res.end('<html><body><h1>Too Many Requests</h1></body></html>');
+    return;
+  }
+
+  res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+  res.end(pageHtml(ua, false));
+});
+
+await new Promise((r) => throttleServer.listen(0, '127.0.0.1', r));
+const THROTTLE_ORIGIN = `http://127.0.0.1:${throttleServer.address().port}`;
+
 /* ========================================================================== */
 /* A. The shipped extension                                                   */
 /* ========================================================================== */
@@ -175,7 +221,7 @@ console.log('\nB. end-to-end fetch pipeline');
 const extB = tmp('aicl-ext-');
 cpSync(EXT, extB, { recursive: true });
 const mB = JSON.parse(readFileSync(join(extB, 'manifest.json'), 'utf8'));
-mB.host_permissions = [`${ORIGIN}/*`];
+mB.host_permissions = [`${ORIGIN}/*`, `${THROTTLE_ORIGIN}/*`];
 writeFileSync(join(extB, 'manifest.json'), JSON.stringify(mB, null, 2));
 
 const ctxB = await chromium.launchPersistentContext(tmp('aicl-b-'), {
@@ -233,6 +279,18 @@ const pageReqs = seenRequests.filter((r) => r.url === '/');
 is(pageReqs.length, BOTS.length, `exactly one page request per bot (${BOTS.length})`);
 const overlapping = pageReqs.some((r, i) => i > 0 && r.at < pageReqs[i - 1].at);
 is(overlapping, false, 'page requests arrived in order — fetches are sequential');
+
+/* --- paced, not burst ---------------------------------------------------- */
+// Nine requests for one URL inside a second is the burst pattern rate limiters
+// exist to catch, and the bots at the end of the sequence are the ones that get
+// caught — which used to surface as "blocked". Assert the gap is real. 350ms
+// rather than the 400ms constant: timer resolution, not a tolerance for drift.
+const gaps = pageReqs.slice(1).map((r, i) => r.at - pageReqs[i].at);
+is(
+  gaps.every((g) => g >= 350),
+  true,
+  `every gap between page fetches is >= 350ms (smallest was ${gaps.length ? Math.min(...gaps) : 'n/a'}ms)`
+);
 
 /* --- robots.txt --------------------------------------------------------- */
 is(R.robots.state, 'ok', 'robots.txt parsed');
@@ -346,8 +404,54 @@ is(typeof A.pageVerdict.headline, 'string', 'a page-level verdict is produced');
 is(A.pageVerdict.severity, 'critical', 'critical, because two bots cannot reach the page at all');
 is(A.pageVerdict.headline.includes('GPTBot'), true, 'naming the bots that cannot reach it');
 
+/* ========================================================================== */
+/* E. Rate limiting is not bot blocking                                       */
+/* ========================================================================== */
+console.log('\nE. rate limiting');
+
+throttleSeen.length = 0;
+const limited = await driver.evaluate(
+  async (url) => chrome.runtime.sendMessage({ type: 'AICL_RUN_FETCHES', url }),
+  `${THROTTLE_ORIGIN}/`
+);
+is(limited.ok, true, `rate-limited run completed${limited.ok ? '' : ': ' + limited.error}`);
+const T = limited.result;
+
+/* --- the retry recovers -------------------------------------------------- */
+is(T.perBot.gptbot.status, 'ok', 'a 429 that clears on retry ends as "ok", not an error');
+is(T.perBot.gptbot.attempts, 2, 'and it took exactly two attempts');
+is(T.perBot.gptbot.httpStatus, 200, 'with the successful status kept, not the 429');
+
+// Two requests from GPTBot, at least a second apart, is Retry-After: 1 being
+// read and honoured rather than the default pacing being used.
+const gptReqs = throttleSeen.filter((r) => /GPTBot/i.test(r.ua) && r.url === '/');
+is(gptReqs.length, 2, 'GPTBot really was requested twice');
+is(
+  gptReqs.length === 2 && gptReqs[1].at - gptReqs[0].at >= 900,
+  true,
+  `Retry-After: 1 was honoured (waited ${gptReqs.length === 2 ? gptReqs[1].at - gptReqs[0].at : 'n/a'}ms)`
+);
+
+/* --- a persistent 429 is throttled, never blocked ------------------------ */
+is(T.perBot.claudebot.status, 'throttled', 'a persistent 429 reads as "throttled"');
+is(T.perBot.claudebot.status === 'blocked', false, 'and is NEVER reported as server-level bot blocking');
+is(T.perBot.claudebot.httpStatus, 429, 'with the 429 preserved');
+is(T.perBot.claudebot.attempts, 2, 'after one retry');
+
+/* --- and it is surfaced as an incomplete run ----------------------------- */
+is(T.throttling.any, true, 'the run reports that throttling happened');
+is(T.throttling.count, 1, 'exactly one bot was throttled');
+is(T.throttling.botIds, ['claudebot'], 'and it is named');
+is(T.throttling.finalPacingMs > 400, true, `the pacer backed off (${T.throttling.finalPacingMs}ms)`);
+
+/* --- everyone else is unaffected ----------------------------------------- */
+is(T.perBot.googlebot.status, 'ok', 'bots that were never limited still succeed');
+is(T.perBot.generic.status, 'ok', 'including the baseline');
+
 await ctxB.close();
+
 server.close();
+throttleServer.close();
 
 /* ========================================================================== */
 /* C + D. Engine and overlay against a real DOM                               */

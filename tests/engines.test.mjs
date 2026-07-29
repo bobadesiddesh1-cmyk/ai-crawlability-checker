@@ -254,6 +254,26 @@ const vBlockedNoBase = verdict.buildVerdict(
 is(vBlockedNoBase.because.includes('specific to this bot'), false,
    'no baseline 200 means no claim about it being user-agent-specific');
 
+// Gate 2a: rate limited. This is the one that used to be wrong — 429 sat in
+// BLOCKING_STATUSES, so "you asked too fast" was reported as "your firewall
+// blocks this crawler", sending the user to a bot-management console to look
+// for a rule that was never there.
+const vThrottled = verdict.buildVerdict(
+  bot({ label: 'ClaudeBot', status: 'throttled', httpStatus: 429, score: null, scoreMeaningful: false }),
+  { baselineOk: true, baselineLabel: 'Generic non-JS bot' }
+);
+is(vThrottled.state, 'throttled', 'a persistent 429 is its own verdict, not a server block');
+is(vThrottled.severity, 'warn', 'and it is a warning, not critical — nothing is wrong with the site');
+is(vThrottled.summary.includes('not measured'), true, 'the summary says the result is absent');
+is(/firewall|WAF|bot-management/i.test(vThrottled.fix), false,
+   'the fix must NOT send the user to bot management — that is the false trail');
+is(vThrottled.because.includes('says nothing about whether'), true,
+   'and it states outright that this is not evidence about the crawler');
+is(gateState(vThrottled, 'robots'), 'pass', 'robots passed before the rate limit hit');
+is(gateState(vThrottled, 'served'), 'warn', 'the served gate warns rather than fails');
+is(['html', 'source', 'js'].map((g) => gateState(vThrottled, g)),
+   ['skip', 'skip', 'skip'], 'nothing downstream is claimed — it was never measured');
+
 // Gate 4 for a crawler that cannot recover: the decisive failure.
 const vCsr = verdict.buildVerdict(bot({ score: 24, invisibleCount: 13, invisibleHeadings: 3, totalBlocks: 17 }));
 is(vCsr.state, 'not-crawlable', 'a non-JS crawler on a client-rendered page cannot read it');
@@ -310,6 +330,19 @@ const sCsr = verdict.summarisePage(withVerdicts([
 ]));
 is(sCsr.severity, 'critical', 'AI crawlers that cannot read the page is critical');
 is(sCsr.headline.includes('cannot read it'), true, 'and the headline says so plainly');
+
+// A throttled bot must not be quietly counted as readable or unreadable. Both
+// would turn a hole in the data into a finding about the page.
+const sThrottled = verdict.summarisePage(withVerdicts([
+  { label: 'Googlebot', executesJs: true, score: 98 },
+  { label: 'GPTBot', score: 98 },
+  { label: 'ClaudeBot', status: 'throttled', httpStatus: 429, score: null, scoreMeaningful: false }
+]));
+is(sThrottled.severity, 'warn', 'a throttled bot downgrades the page verdict to a warning');
+is(sThrottled.headline.includes('Incomplete'), true, 'and the headline leads with incompleteness');
+is(sThrottled.headline.includes('Every AI crawler'), false,
+   'it must never claim every crawler is fine when one was never measured');
+is(sThrottled.detail.includes('ClaudeBot'), true, 'naming the bot that was not measured');
 
 const sFine = verdict.summarisePage(withVerdicts([
   { label: 'Googlebot', executesJs: true, score: 98 },

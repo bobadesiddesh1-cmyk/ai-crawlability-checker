@@ -130,6 +130,33 @@
       };
     }
 
+    /* --- Gate 2a: rate limited, which is not an answer about this bot ----- */
+    if (bot.status === 'throttled') {
+      return {
+        state: 'throttled',
+        severity: 'warn',
+        summary: 'Rate-limited — not measured',
+        headline: `Your server rate-limited the check before ${label} could be measured.`,
+        because:
+          `The server answered HTTP ${bot.httpStatus} — "too many requests" — because this check ` +
+          'asks for the same page once per crawler in quick succession. That is a limit on ' +
+          `request rate, not a rule about ${label}. This result says nothing about whether ` +
+          `${label} can read the page.`,
+        fix:
+          'Re-run the check — it now paces requests and backs off further after a 429, so a ' +
+          'second run usually completes. If it keeps happening, the origin has an aggressive ' +
+          'rate limit and the page is best checked on its own.',
+        gates: [
+          robotsGate,
+          gate('served', 'Server responds', 'warn',
+            `HTTP ${bot.httpStatus} — rate-limited, so the page was never returned to measure.`),
+          gate('html', 'Response is HTML', 'skip', 'Never reached — the request was rate-limited.'),
+          gate('source', 'Content present without JavaScript', 'skip', 'Never reached — the request was rate-limited.'),
+          gate('js', 'Runs JavaScript', 'skip', 'Not relevant — nothing was measured.')
+        ]
+      };
+    }
+
     if (bot.status === 'error') {
       return {
         state: 'error',
@@ -306,6 +333,22 @@
         detail:
           'Nothing is blocking these crawlers. The content simply is not in the HTML your server returns — ' +
           'it is written by JavaScript after load, and they do not run JavaScript.'
+      };
+    }
+
+    // Before any "all clear" or "partly readable" claim. A throttled bot was
+    // never measured, so counting it as anything other than unmeasured turns a
+    // gap in the data into a finding about the page.
+    const throttled = bots.filter((b) => b.verdict.state === 'throttled');
+    if (throttled.length) {
+      return {
+        severity: 'warn',
+        headline: `Incomplete — your server rate-limited ${throttled.length} of ${bots.length} crawler checks.`,
+        detail:
+          `${throttled.map((b) => b.label).join(', ')} ${throttled.length === 1 ? 'was' : 'were'} ` +
+          'answered with "too many requests", so nothing was measured for ' +
+          `${throttled.length === 1 ? 'it' : 'them'}. That is a limit on how fast this check asks, ` +
+          'not a rule about those crawlers. Re-run to complete the picture.'
       };
     }
 

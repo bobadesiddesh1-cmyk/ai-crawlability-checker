@@ -252,6 +252,7 @@
         containerSelector: rendered.containerSelector
       },
       robots: fetched.robots,
+      throttling: fetched.throttling,
       order,
       perBot,
       pageVerdict,
@@ -297,6 +298,7 @@
     if (robotsBlocked) return 'Disallowed in robots.txt';
     if (f.status === 'ok') return `OK (${f.httpStatus})`;
     if (f.status === 'blocked') return `Blocked (${f.httpStatus})`;
+    if (f.status === 'throttled') return `Rate-limited (${f.httpStatus})`;
     if (f.httpStatus) return `Error (${f.httpStatus})`;
     return 'Error';
   }
@@ -321,6 +323,12 @@
       parts.push(
         `The server returned HTTP ${f.httpStatus} to this bot's User-Agent. ` +
           'If the plain-UA baseline got a 200, the block is user-agent-specific.'
+      );
+    } else if (f.status === 'throttled') {
+      parts.push(
+        `The server returned HTTP ${f.httpStatus} — rate limiting, not bot blocking. ` +
+          (f.attempts > 1 ? 'The check waited and retried once, and was limited again. ' : '') +
+          'This bot was never measured, so it has no score. Re-check to fill the gap.'
       );
     } else if (f.status === 'error') {
       parts.push(f.error || `The server returned HTTP ${f.httpStatus}.`);
