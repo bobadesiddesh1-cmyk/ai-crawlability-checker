@@ -11,6 +11,23 @@ to different bots.
 
 ---
 
+## What it looks like
+
+| | |
+|---|---|
+| ![Popup results](../docs/screenshots/popup-results.png) | ![On-page overlay](../docs/screenshots/overlay.png) |
+| **Popup** — robots.txt criticals first, per-bot table, bot tabs, framework fix, export, history. | **On-page overlay** — every block invisible to the selected bot outlined in red, visible blocks in green. Drawn over the page; the page is never modified. |
+
+![Exported report](../docs/screenshots/report.png)
+
+*Standalone HTML report — self-contained, makes zero network requests when opened.*
+
+Screenshots are of a deliberately client-rendered demo site whose `robots.txt` disallows
+GPTBot and Google-Extended, and whose server returns 403 to PerplexityBot — so every
+finding type appears at once. Dark mode: [`popup-dark.png`](../docs/screenshots/popup-dark.png).
+
+---
+
 ## The problem this exists for
 
 Most JavaScript-heavy sites operate on an assumption that used to be safe:

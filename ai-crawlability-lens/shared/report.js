@@ -35,6 +35,25 @@ function esc(value) {
 }
 
 /**
+ * Escape for HTML, rendering `backticked` spans as <code>.
+ *
+ * The recommendation strings name real API identifiers (`getServerSideProps`,
+ * `'use client'`), which read as noise when the backticks are printed literally.
+ * Every segment still goes through `esc()`, so this adds markup without
+ * widening what can be injected.
+ *
+ * @param {unknown} value
+ * @returns {string}
+ */
+function escWithCode(value) {
+  return String(value === null || value === undefined ? '' : value)
+    .split('`')
+    // Odd indices sit between a pair of backticks.
+    .map((part, i) => (i % 2 === 1 ? `<code>${esc(part)}</code>` : esc(part)))
+    .join('');
+}
+
+/**
  * @param {number|null} score
  * @returns {'red'|'amber'|'green'|'none'}
  */
@@ -326,8 +345,8 @@ function renderFrameworkSection(framework, fix) {
   return `<h2>Framework and recommendation</h2>
     <div class="card">
       <h3 style="margin-top:0">${esc(fix.label)}${framework && framework.confidence ? ` <span class="muted">(${esc(framework.confidence)} confidence)</span>` : ''}</h3>
-      <p><strong>${esc(fix.fix)}</strong></p>
-      ${fix.detail ? `<p class="muted">${esc(fix.detail)}</p>` : ''}
+      <p><strong>${escWithCode(fix.fix)}</strong></p>
+      ${fix.detail ? `<p class="muted">${escWithCode(fix.detail)}</p>` : ''}
       ${signals.length ? `<p class="muted">Detection signals: ${signals.map((s) => `<code>${esc(s)}</code>`).join(', ')}</p>` : ''}
     </div>`;
 }
@@ -340,14 +359,31 @@ function renderInvisibleSection(bots) {
       reached this page can see all of its content without executing JavaScript.</p>`;
   }
 
+  // Absent cloaking, every bot that received the page sees the same thing, so
+  // printing one identical list per bot is pure padding in a client-facing
+  // document. Group bots by their invisible-block set and print each set once.
+  /** @type {Map<string, {labels: string[], bot: any}>} */
+  const groups = new Map();
+  for (const b of withInvisible) {
+    const key = b.invisibleBlocks.map((x) => `${x.tag} ${x.text}`).join('');
+    const existing = groups.get(key);
+    if (existing) existing.labels.push(b.label);
+    else groups.set(key, { labels: [b.label], bot: b });
+  }
+
   return `<h2>Content invisible to bots</h2>
     <p class="muted">Blocks present in the rendered page but absent from the raw HTML that bot received.
     These can never be quoted or cited by a crawler that does not execute JavaScript.</p>
-    ${withInvisible
-      .map((b) => {
+    ${[...groups.values()]
+      .map(({ labels, bot: b }) => {
         const shown = b.invisibleBlocks.slice(0, MAX_BLOCKS_IN_REPORT);
         const hidden = b.invisibleCount - shown.length;
-        return `<h3>${esc(b.label)} — ${esc(b.invisibleCount)} invisible block(s)</h3>
+        const heading =
+          labels.length === 1
+            ? `${esc(labels[0])} — ${esc(b.invisibleCount)} invisible block(s)`
+            : `${esc(labels.join(', '))} — ${esc(b.invisibleCount)} invisible block(s) each`;
+        return `<h3>${heading}</h3>
+          ${labels.length > 1 ? '<p class="muted">These bots all received identical HTML, so the same blocks are missing for each.</p>' : ''}
           <ul class="blocks">
             ${shown.map((x) => `<li><span class="tag">${esc(x.tag)}</span>${esc(x.text)}</li>`).join('')}
           </ul>

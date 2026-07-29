@@ -68,7 +68,9 @@
 
     .tag {
       position: absolute;
-      top: -9px;
+      /* Fully above the box border, sitting in the inter-block margin gap.
+         Straddling the border clipped the ascenders on the block's first line. */
+      top: -15px;
       left: 6px;
       font: 600 10px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
       letter-spacing: .02em;

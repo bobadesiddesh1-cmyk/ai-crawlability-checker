@@ -580,14 +580,14 @@ function renderFramework() {
   }
 
   const p = document.createElement('p');
-  p.textContent = fix.fix;
+  setTextWithCode(p, fix.fix);
 
   ui.frameworkCard.append(h3, p);
 
   if (fix.detail) {
     const d = document.createElement('p');
     d.className = 'muted';
-    d.textContent = fix.detail;
+    setTextWithCode(d, fix.detail);
     ui.frameworkCard.appendChild(d);
   }
 
@@ -719,6 +719,31 @@ async function renderHistory() {
 /* -------------------------------------------------------------------------- */
 /* Small helpers                                                               */
 /* -------------------------------------------------------------------------- */
+
+/**
+ * Append text to an element, rendering `backticked` spans as <code>.
+ *
+ * The recommendation strings name real API identifiers (`getServerSideProps`,
+ * `'use client'`). Rendered as flat text the backticks read as noise; rendered
+ * as code they read as what they are.
+ *
+ * @param {HTMLElement} el
+ * @param {string} text
+ */
+function setTextWithCode(el, text) {
+  const parts = String(text).split('`');
+  for (let i = 0; i < parts.length; i += 1) {
+    if (!parts[i]) continue;
+    // Odd indices sit between a pair of backticks.
+    if (i % 2 === 1) {
+      const code = document.createElement('code');
+      code.textContent = parts[i];
+      el.appendChild(code);
+    } else {
+      el.appendChild(document.createTextNode(parts[i]));
+    }
+  }
+}
 
 function scoreBand(score) {
   if (score === null || score === undefined) return 'none';
