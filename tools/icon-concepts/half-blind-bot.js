@@ -1,13 +1,35 @@
 // "THE HALF-BLIND BOT" — app icon concept for AI Crawlability Lens.
 //
-// A reductive bot head: rounded-square visor form in the product's indigo->violet
-// gradient, with two eyes. One eye is lit (white); the other is a dead socket —
-// it is looking at your page, but only half-registering it.
+// A reductive, geometric crawler head: a rounded-square visor form carrying the
+// product's indigo -> violet gradient, with two identical eyes. The left eye is
+// lit (pure white); the right eye is an extinguished socket. Same shape, same
+// size, same position — only the light differs. The bot is looking at your page
+// and only half-registering it.
+//
+// Three shapes total: head, lit eye, dead eye. Nothing else survives 16px.
+//
+// Colour notes (measured, not guessed):
+//   - White lit eye on the gradient body ....... 5.7:1 luminance contrast
+//   - Dead socket #2b0510 on the gradient body . 3.2:1
+//   - Brand red #ef4444 as a solid dead eye .... 1.5:1  <- rejected
+// A solid #ef4444 eye only separates from the indigo/violet body by *hue*, which
+// is exactly what antialiasing destroys at 16px (and what colour-blind users
+// never had). So the dead eye is instead a near-black **extinguished red**
+// (#2b0510): it holds full luminance contrast at 16px, and at 48/128px it reads
+// visibly warm — the "invisible content" red, burnt out — rather than as a
+// generic black square.
+//
+// Rejected during the study: a half-filled visor slit (reads as a UI toggle
+// switch), a dark visor band holding both eyes (busy at 16px), circular eyes
+// (edges go soft at 16px), a red core inside a dark socket (muddies to maroon
+// sludge), a shut-eye dash for the dead side (reads sleepy/cute, and the dash is
+// a hairline), and a helmet head with squared-off bottom corners (blockier at
+// 16px for no gain).
 //
 // Dependency-free PNG encoder (zlib + manual chunks/CRC), 4x supersampled and
-// box-downsampled, same approach as tools/make-icons.js.
+// box-downsampled — same approach as tools/make-icons.js.
 //
-//   node tools/icon-concepts/half-blind-bot.js <outdir> [variant]
+//   node tools/icon-concepts/half-blind-bot.js <outdir>
 
 const fs = require('fs');
 const zlib = require('zlib');
@@ -60,13 +82,23 @@ function encodePng(width, height, rgba) {
 
 const INDIGO = [0x25, 0x63, 0xeb]; // #2563eb
 const VIOLET = [0x7c, 0x3a, 0xed]; // #7c3aed
-const RED    = [0xef, 0x44, 0x44]; // #ef4444  "invisible / missing"
-const WHITE  = [0xff, 0xff, 0xff];
-const SOCKET = [0x0b, 0x10, 0x2b]; // near-black navy: the dead eye
+const WHITE  = [0xff, 0xff, 0xff]; // the lit eye
+const SOCKET = [0x2b, 0x05, 0x10]; // the dead eye: extinguished #ef4444
 
-/* --------------------------------------------------------------- shapes --- */
+/* --------------------------------------------------------------- layout --- */
 
-// All shape maths is in normalised 0..1 space so it is resolution independent.
+// Normalised 0..1 space, so the geometry is resolution independent.
+
+const HEAD = { x0: 0.055, y0: 0.075, x1: 0.945, y1: 0.925, r: 0.235 };
+
+const EYE = {
+  cy: 0.50,
+  hw: 0.135, // half width  -> 4.3px at 16
+  hh: 0.165, // half height -> 5.3px at 16
+  r: 0.06,
+  litX: 0.32,
+  deadX: 0.68  // 1.4px gap between the eyes at 16px: still separates cleanly
+};
 
 function roundRect(u, v, x0, y0, x1, y1, r) {
   if (u < x0 || u > x1 || v < y0 || v > y1) return false;
@@ -75,165 +107,46 @@ function roundRect(u, v, x0, y0, x1, y1, r) {
   return dx * dx + dy * dy <= r * r;
 }
 
-/* ------------------------------------------------------------------ art --- */
-
-// Layout constants, shared by every variant so they stay comparable.
-const HEAD = { x0: 0.055, y0: 0.075, x1: 0.945, y1: 0.925, r: 0.235 };
-
-const EYE_CY = 0.50;
-const EYE_HW = 0.125; // half width
-const EYE_HH = 0.145; // half height
-const EYE_R  = 0.055;
-const EYE_LX = 0.335; // centre of lit eye
-const EYE_RX = 0.665; // centre of dead eye
-
-const VISOR = { x0: 0.155, y0: 0.325, x1: 0.845, y1: 0.675, r: 0.115 };
-
-// Rounded rect with independent top and bottom corner radii (helmet shape).
-function helmetRect(u, v, x0, y0, x1, y1, rt, rb) {
-  if (u < x0 || u > x1 || v < y0 || v > y1) return false;
-  const top = v < (y0 + y1) / 2;
-  const r = top ? rt : rb;
-  const dx = Math.max(x0 + r - u, 0, u - (x1 - r));
-  const dy = top ? Math.max(y0 + r - v, 0) : Math.max(v - (y1 - r), 0);
-  return dx * dx + dy * dy <= r * r;
+function eye(u, v, cx) {
+  return roundRect(u, v, cx - EYE.hw, EYE.cy - EYE.hh, cx + EYE.hw, EYE.cy + EYE.hh, EYE.r);
 }
 
-function shade(u, v, variant) {
-  const helmet = 'PQ'.includes(variant);
-  const inHead = helmet
-    ? helmetRect(u, v, HEAD.x0, HEAD.y0, HEAD.x1, HEAD.y1, 0.30, 0.15)
-    : roundRect(u, v, HEAD.x0, HEAD.y0, HEAD.x1, HEAD.y1, HEAD.r);
-  if (!inHead) return null;
+/* ------------------------------------------------------------------ art --- */
 
-  // Body: indigo -> violet along the diagonal. Variants K/L run the ramp the
-  // other way so the dead (right) eye sits on blue, maximising hue contrast.
-  const reversed = variant === 'K' || variant === 'L';
-  let t = Math.min(1, Math.max(0, (u + v) / 2));
-  if (reversed) t = 1 - t;
+function shade(u, v) {
+  if (!roundRect(u, v, HEAD.x0, HEAD.y0, HEAD.x1, HEAD.y1, HEAD.r)) return null;
+
+  // Body: indigo -> violet along the diagonal. Mid-tone on purpose, so the mark
+  // holds its own against both a white and a near-black browser toolbar.
+  const t = Math.min(1, Math.max(0, (u + v) / 2));
   let col = [
     INDIGO[0] + (VIOLET[0] - INDIGO[0]) * t,
     INDIGO[1] + (VIOLET[1] - INDIGO[1]) * t,
     INDIGO[2] + (VIOLET[2] - INDIGO[2]) * t
   ];
 
-  const litEye  = roundRect(u, v, EYE_LX - EYE_HW, EYE_CY - EYE_HH, EYE_LX + EYE_HW, EYE_CY + EYE_HH, EYE_R);
-  const deadEye = roundRect(u, v, EYE_RX - EYE_HW, EYE_CY - EYE_HH, EYE_RX + EYE_HW, EYE_CY + EYE_HH, EYE_R);
-
-  switch (variant) {
-    // A — two eyes, dead eye is a black socket.
-    case 'A':
-      if (litEye) col = WHITE;
-      else if (deadEye) col = SOCKET;
-      break;
-
-    // B — two eyes, dead eye is red.
-    case 'B':
-      if (litEye) col = WHITE;
-      else if (deadEye) col = RED;
-      break;
-
-    // C — a single visor slit, left half lit, right half dead.
-    case 'C': {
-      if (roundRect(u, v, VISOR.x0, VISOR.y0, VISOR.x1, VISOR.y1, VISOR.r)) {
-        col = u < 0.5 ? WHITE : SOCKET;
-      }
-      break;
-    }
-
-    // D — dark visor band holding a white eye and a red eye.
-    case 'D': {
-      if (roundRect(u, v, VISOR.x0, VISOR.y0, VISOR.x1, VISOR.y1, VISOR.r)) col = SOCKET;
-      if (litEye) col = WHITE;
-      else if (deadEye) col = RED;
-      break;
-    }
-
-    // E — dead socket with a red core: dark ring reads at 16px, red reads above.
-    case 'E':
-      if (litEye) col = WHITE;
-      else if (deadEye) {
-        const inner = roundRect(
-          u, v,
-          EYE_RX - EYE_HW * 0.52, EYE_CY - EYE_HH * 0.52,
-          EYE_RX + EYE_HW * 0.52, EYE_CY + EYE_HH * 0.52,
-          EYE_R * 0.5
-        );
-        col = inner ? RED : SOCKET;
-      }
-      break;
-
-    // F — asymmetric eyes: the dead one is a squashed slit, i.e. shut.
-    case 'F':
-      if (litEye) col = WHITE;
-      else if (roundRect(u, v, EYE_RX - EYE_HW, EYE_CY - EYE_HH * 0.34, EYE_RX + EYE_HW, EYE_CY + EYE_HH * 0.34, EYE_R * 0.5)) {
-        col = SOCKET;
-      }
-      break;
-
-    // G — tight goggle bar hugging the eyes, white + red.
-    case 'G': {
-      if (roundRect(u, v, EYE_LX - EYE_HW - 0.045, EYE_CY - EYE_HH - 0.045, EYE_RX + EYE_HW + 0.045, EYE_CY + EYE_HH + 0.045, 0.085)) col = SOCKET;
-      if (litEye) col = WHITE;
-      else if (deadEye) col = RED;
-      break;
-    }
-
-    // H — like B but a deeper red (#dc2626) for more contrast on violet.
-    case 'H':
-      if (litEye) col = WHITE;
-      else if (deadEye) col = [0xdc, 0x26, 0x26];
-      break;
-
-    // I — circular eyes instead of rounded squares.
-    case 'I': {
-      const dl = Math.hypot(u - EYE_LX, v - EYE_CY);
-      const dr = Math.hypot(u - EYE_RX, v - EYE_CY);
-      if (dl <= 0.135) col = WHITE;
-      else if (dr <= 0.135) col = SOCKET;
-      break;
-    }
-
-    // J — dead eye is a black socket, lit eye white, both inside a black visor.
-    case 'J': {
-      if (roundRect(u, v, VISOR.x0, VISOR.y0, VISOR.x1, VISOR.y1, VISOR.r)) col = SOCKET;
-      if (litEye) col = WHITE;
-      break;
-    }
-
-    // K — brand #ef4444 dead eye on a reversed (violet->indigo) ramp.
-    case 'K':
-      if (litEye) col = WHITE;
-      else if (deadEye) col = RED;
-      break;
-
-    // L — deeper red dead eye on a reversed ramp.
-    case 'L':
-      if (litEye) col = WHITE;
-      else if (deadEye) col = [0xdc, 0x26, 0x26];
-      break;
-
-    default:
-      throw new Error('unknown variant ' + variant);
-  }
+  if (eye(u, v, EYE.litX)) col = WHITE;
+  else if (eye(u, v, EYE.deadX)) col = SOCKET;
 
   return [col[0], col[1], col[2], 255];
 }
 
-const SS = 4;
+const SS = 4; // supersampling factor
 
-function draw(size, variant) {
+function draw(size) {
   const W = size * SS;
   const acc = new Float64Array(W * W * 4);
   for (let y = 0; y < W; y++) {
     for (let x = 0; x < W; x++) {
-      const px = shade((x + 0.5) / W, (y + 0.5) / W, variant);
+      const px = shade((x + 0.5) / W, (y + 0.5) / W);
       if (!px) continue;
       const i = (y * W + x) * 4;
       acc[i] = px[0]; acc[i + 1] = px[1]; acc[i + 2] = px[2]; acc[i + 3] = px[3];
     }
   }
 
+  // Box-downsample, compositing in premultiplied alpha so the rounded edge
+  // does not pick up a dark fringe.
   const out = Buffer.alloc(size * size * 4);
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
@@ -264,16 +177,15 @@ const SIZES = [16, 32, 48, 128];
 
 function main() {
   const out = process.argv[2];
-  const variant = process.argv[3] || 'A';
   if (!out) {
-    console.error('usage: node half-blind-bot.js <outdir> [variant]');
+    console.error('usage: node half-blind-bot.js <outdir>');
     process.exit(1);
   }
   fs.mkdirSync(out, { recursive: true });
   for (const size of SIZES) {
-    const png = encodePng(size, size, draw(size, variant));
+    const png = encodePng(size, size, draw(size));
     fs.writeFileSync(path.join(out, `icon${size}.png`), png);
-    console.log(`icon${size}.png  ${png.length} bytes  (variant ${variant})`);
+    console.log(`icon${size}.png  ${png.length} bytes`);
   }
 }
 

@@ -20,7 +20,15 @@ const CONCEPTS_DIR = path.join(ROOT, 'docs', 'icon-concepts');
 const SHIPPED_DIR = path.join(ROOT, 'ai-crawlability-lens', 'icons');
 const OUT = process.argv[2] || path.join(ROOT, 'docs', 'icon-sheet.html');
 
+/** Every size the manifest ships. */
 const SIZES = [16, 32, 48, 128];
+
+/**
+ * Sizes shown in the sample row. 128 is excluded because it is already the
+ * hero — repeating it there both duplicates information and overflows the row,
+ * since a 128px image cannot sit in a row sized for a 48px one.
+ */
+const ROW_SIZES = [16, 32, 48];
 
 /** @param {string} file @returns {string|null} */
 function dataUri(file) {
@@ -86,9 +94,12 @@ function build(concepts, notes) {
       </header>
 
       <div class="showcase">
-        <img class="hero" src="${c.icons[128]}" alt="${esc(c.title)} at 128 pixels" width="128" height="128">
+        <figure class="hero-fig">
+          <img class="hero" src="${c.icons[128]}" alt="${esc(c.title)} at 128 pixels" width="128" height="128">
+          <figcaption>128px</figcaption>
+        </figure>
         <div class="sizes">
-          ${SIZES.map(
+          ${ROW_SIZES.map(
             (s) => `<figure>
               <div class="cell"><img src="${c.icons[s]}" alt="${esc(c.title)} at ${s} pixels" width="${s}" height="${s}"></div>
               <figcaption>${s}px</figcaption>
@@ -157,8 +168,11 @@ function build(concepts, notes) {
          font-weight:600; color:var(--muted); border:1px solid var(--line);
          border-radius:999px; padding:2px 8px; }
 
-  .showcase { display:flex; gap:22px; align-items:flex-start; flex-wrap:wrap; }
-  .hero { border-radius:14px; flex:none; image-rendering:auto; }
+  .showcase { display:flex; gap:22px; align-items:flex-end; flex-wrap:wrap; }
+  .hero-fig { margin:0; text-align:center; flex:none; }
+  .hero { border-radius:14px; display:block; image-rendering:auto; }
+  .hero-fig figcaption { font-family:var(--mono); font-size:9.5px; color:var(--muted);
+                         letter-spacing:.06em; margin-top:5px; }
   .sizes { display:flex; gap:14px; align-items:flex-end; flex-wrap:wrap; }
   .sizes figure { margin:0; text-align:center; }
   .sizes .cell { height:52px; display:grid; place-items:center; }

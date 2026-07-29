@@ -78,17 +78,18 @@ const GLASS_DARKEN = 0.42;
 
 const SS = 4; // supersample factor
 
-// Wedge: apex at the lens centre, opening toward the lower-left, away from the
-// handle. Angles are screen-space (atan2(dy, dx), y growing downward).
-const WEDGE_CENTRE = 198 * (Math.PI / 180);
-const WEDGE_HALF   = 61 * (Math.PI / 180);
-
-function angleDelta(a, b) {
-  let d = a - b;
-  while (d > Math.PI) d -= 2 * Math.PI;
-  while (d < -Math.PI) d += 2 * Math.PI;
-  return d;
-}
+// The blind region is a half-plane clipped to the glass: a hard straight cut
+// across the field of view, with everything beyond it dead. A straight chord
+// (rather than a pie wedge from the centre) keeps this from reading as a chart
+// slice, and holds a solid, contiguous mass of red down at 16px.
+//
+// BLIND_NORMAL points from the live side toward the dead side, in screen space
+// (atan2(dy, dx), y growing downward). ~209deg tilts the cut off vertical so it
+// reads as a deliberate edge rather than a half-full meter.
+const BLIND_NORMAL = 209 * (Math.PI / 180);
+// Offset of the cut from the lens centre, as a fraction of the glass radius.
+// Tuned so the dead side and the surviving glass both keep real mass at 16px.
+const BLIND_OFFSET = 0.10;
 
 function draw(size) {
   const W = size * SS;
@@ -107,8 +108,10 @@ function draw(size) {
   const dir = Math.PI / 4; // 45deg, down-right
   const hx1 = cx + Math.cos(dir) * (ringInner + (ringOuter - ringInner) * 0.4);
   const hy1 = cy + Math.sin(dir) * (ringInner + (ringOuter - ringInner) * 0.4);
-  const hx2 = cx + Math.cos(dir) * (W * 0.655);
-  const hy2 = cy + Math.sin(dir) * (W * 0.655);
+  // Stop short of the tile's rounded corner so the round cap reads as a
+  // deliberate terminal rather than a clipped edge.
+  const hx2 = cx + Math.cos(dir) * (W * 0.575);
+  const hy2 = cy + Math.sin(dir) * (W * 0.575);
   const halfHandle = W * 0.078; // => 0.156W wide (2.5px @16)
 
   function tileAlpha(x, y) {
@@ -141,8 +144,10 @@ function draw(size) {
       let B = INDIGO[2] + (VIOLET[2] - INDIGO[2]) * t;
 
       const d = Math.hypot(sx - cx, sy - cy);
-      const ang = Math.atan2(sy - cy, sx - cx);
-      const inWedge = Math.abs(angleDelta(ang, WEDGE_CENTRE)) <= WEDGE_HALF;
+      // Signed distance across the cut; positive is the dead side.
+      const cut = (sx - cx) * Math.cos(BLIND_NORMAL)
+                + (sy - cy) * Math.sin(BLIND_NORMAL);
+      const isBlind = cut >= ringInner * BLIND_OFFSET;
 
       const onHandle = distToSegment(sx, sy, hx1, hy1, hx2, hy2) <= halfHandle;
 
@@ -152,10 +157,10 @@ function draw(size) {
         R *= GLASS_DARKEN; G *= GLASS_DARKEN; B *= GLASS_DARKEN;
       }
 
-      // The blind field: a hard-edged wedge of dead glass. The ring stays
+      // The blind field: a hard-edged region of dead glass. The bezel stays
       // closed so the circle silhouette survives; what's missing is what the
       // instrument should be seeing.
-      if (inWedge && d < ringInner) {
+      if (isBlind && d < ringInner) {
         R = RED[0]; G = RED[1]; B = RED[2];
       }
 

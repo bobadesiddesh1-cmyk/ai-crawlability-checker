@@ -1,0 +1,309 @@
+<title>AI Crawlability Lens — icon concepts</title>
+<style>
+  :root {
+    --bg:#f2f4f7; --surface:#fff; --surface-2:#f7f8fa; --ink:#10131a; --muted:#5b6472;
+    --line:#dee2e9; --accent:#4f46e5;
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0a0c10; --surface:#12151c; --surface-2:#171b23; --ink:#e7eaf0;
+            --muted:#8c96a6; --line:#242b36; --accent:#8b85ff; }
+  }
+  :root[data-theme="light"] { --bg:#f2f4f7; --surface:#fff; --surface-2:#f7f8fa; --ink:#10131a;
+                              --muted:#5b6472; --line:#dee2e9; --accent:#4f46e5; }
+  :root[data-theme="dark"] { --bg:#0a0c10; --surface:#12151c; --surface-2:#171b23; --ink:#e7eaf0;
+                             --muted:#8c96a6; --line:#242b36; --accent:#8b85ff; }
+
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans);
+         font-size:15px; line-height:1.6; -webkit-font-smoothing:antialiased; }
+  .shell { max-width:1180px; margin:0 auto; padding:34px 22px 72px; }
+
+  .eyebrow { font-family:var(--mono); font-size:11.5px; letter-spacing:.14em;
+             text-transform:uppercase; color:var(--accent); margin:0 0 12px; }
+  h1 { font-size:clamp(26px,3.6vw,38px); line-height:1.12; letter-spacing:-.028em;
+       font-weight:680; margin:0 0 14px; text-wrap:balance; max-width:22ch; }
+  .lede { font-size:16.5px; color:var(--muted); max-width:64ch; margin:0 0 8px; }
+  .lede strong { color:var(--ink); font-weight:620; }
+  header.page-head { padding-bottom:26px; margin-bottom:30px; border-bottom:1px solid var(--line); }
+
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); gap:20px; }
+
+  .concept { background:var(--surface); border:1px solid var(--line); border-radius:12px;
+             padding:18px 20px 20px; }
+  .concept-head h2 { font-size:16px; letter-spacing:-.015em; margin:0 0 16px;
+                     display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+  .tag { font-family:var(--mono); font-size:9.5px; letter-spacing:.07em; text-transform:uppercase;
+         font-weight:600; color:var(--muted); border:1px solid var(--line);
+         border-radius:999px; padding:2px 8px; }
+
+  .showcase { display:flex; gap:22px; align-items:flex-end; flex-wrap:wrap; }
+  .hero-fig { margin:0; text-align:center; flex:none; }
+  .hero { border-radius:14px; display:block; image-rendering:auto; }
+  .hero-fig figcaption { font-family:var(--mono); font-size:9.5px; color:var(--muted);
+                         letter-spacing:.06em; margin-top:5px; }
+  .sizes { display:flex; gap:14px; align-items:flex-end; flex-wrap:wrap; }
+  .sizes figure { margin:0; text-align:center; }
+  .sizes .cell { height:52px; display:grid; place-items:center; }
+  .sizes img { image-rendering:auto; }
+  .sizes figcaption { font-family:var(--mono); font-size:9.5px; color:var(--muted);
+                      letter-spacing:.06em; margin-top:5px; }
+
+  .toolbars { display:flex; flex-direction:column; gap:7px; margin-top:18px; }
+  .toolbar { display:flex; align-items:center; gap:9px; padding:6px 9px; border-radius:8px;
+             border:1px solid var(--line); font-size:11px; }
+  .toolbar.light { background:#f1f3f4; color:#5f6368; border-color:#dadce0; }
+  .toolbar.dark  { background:#292a2d; color:#9aa0a6; border-color:#3c4043; }
+  .tb-dots { display:flex; gap:3px; }
+  .tb-dots i { width:6px; height:6px; border-radius:50%; background:currentColor;
+               opacity:.45; display:block; }
+  .tb-omni { flex:1; min-width:0; font-family:var(--mono); font-size:10px;
+             background:rgba(128,128,128,.16); border-radius:999px; padding:2px 9px;
+             white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .tb-label { font-family:var(--mono); font-size:9px; letter-spacing:.08em;
+              text-transform:uppercase; opacity:.7; }
+
+  .note { margin-top:16px; padding-top:14px; border-top:1px solid var(--line);
+          font-size:13.5px; color:var(--muted); }
+  .note b { color:var(--ink); font-weight:620; }
+  .note p { margin:0 0 8px; }
+  .note p:last-child { margin-bottom:0; }
+
+  footer.page-foot { margin-top:38px; padding-top:18px; border-top:1px solid var(--line);
+                     color:var(--muted); font-size:12.5px; }
+  footer.page-foot b { color:var(--ink); }
+  footer code { font-family:var(--mono); font-size:.92em; }
+</style>
+
+<div class="shell">
+  <header class="page-head">
+    <p class="eyebrow">AI Crawlability Lens · icon concepts</p>
+    <h1>Four directions, at the size that actually decides it</h1>
+    <p class="lede">
+      Each concept is a real generated PNG set — 16, 32, 48 and 128 — not a sketch.
+      <strong>Judge them in the toolbar strips</strong>, not by the 128px hero: a Chrome action
+      icon lives at 16px, and that is where most icon ideas quietly fall apart.
+    </p>
+  </header>
+
+  <div class="grid">
+
+    <article class="concept" id="current">
+      <header class="concept-head">
+        <h2>Current (shipped)<span class="tag">in the manifest today</span></h2>
+      </header>
+
+      <div class="showcase">
+        <figure class="hero-fig">
+          <img class="hero" src="data:image/png;base64,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" alt="Current (shipped) at 128 pixels" width="128" height="128">
+          <figcaption>128px</figcaption>
+        </figure>
+        <div class="sizes">
+          <figure>
+              <div class="cell"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACBUlEQVR42pWTS2tTURSFz0/IPzEqPlC0J83Da2pNtI1p06YVxQeWVkuRqmhLW0MQHSgIgoiCrUN/gTgRO44RRNuRw9azr4abRqShLlk3PZebVpQuyCSXb5+9115bqZB2D5no3qLR+weMPlgw+nC/6KN50bEzouM50ale0c5piaqt2jVsItEhU9lTNNg3aHCgYHCo3+BIn0DnBZ05QbJX4PQI0qcE3VmpZDMSCQrsEEY2I+g5KZWg7TA8MlfD8tcmrFa+bWDmnrcVRu6EIN8lUcWZwzD1abmJhdc/8fxVA5+XWsVKZa8N7usSFNKiFQ2zbfPl9cVFPLpdxZ2yh+myh5mShy9LTayubrTBA2nB4HHRim7bmam1qSmsOBk8vlX14dmSh/n5hv/t+lgtgIuOYNgRrbgqaxhVn5jAj0TCL/LkZhWlux4WXrYK3BitBfDZY4JzKdGKe7Zu0zCOwAK2yNPJKj5+WEdj7XcbfD4luJAUrRgSuyq6TbEIO/F/b9/7/71786sNvpgUXEq4WjFh4T3TbRpmxZcJU88e1AP4ctzFlbirlR/P7SHxDQvPTJh6cb/uwyOdLkZjrlbM9t9CEnbbtk2YejjuYSzm4qp2W3exme1/wrZtwpPd33Gtw60Et8DDYLb/B7Ntvkx4vMONbLtKZpvxZMIYEu6Zq6LbNIwzB21v6g/9cmwF6lcOCAAAAABJRU5ErkJggg==" alt="Current (shipped) at 16 pixels" width="16" height="16"></div>
+              <figcaption>16px</figcaption>
+            </figure><figure>
+              <div class="cell"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAEFUlEQVR42s2Xy28bVRTG+x+RQgsttMRJnHdCXMdx4mdMKX0FSuiqpW1yEzJxAQErBGJHxKaoXbCsUCtVTXhJSGVDRRByVyVwzzT2jPOqFX/oWDOTO/bMxKBE6pGusshYv++ce+93zj1w4FmNlqwMHcxI8UJGikNpKQ6npHgpJcWRpBRHE1K8kiBxbIzE8VESraMkQnES7XESHSMkwjESXTES3cMkeqIk+qIUahr8XFZGWrKycDAj8XxG4lBa4nBK4sWUxJGkxNGkxMsJiWNjhONjhFdHCaE4oS1O6BghhGOEzhihe5jQM0zojRL6TxAGTlBhMEKRYPi4zLVkJfYBjsEIYWiIEBmiXFDm+w1H9DXC8KBHJZote+9JHRdmSpicKSEx8eT/wBEbpILXgQuEa5+b+ONRBfWx8s82Fm6sI5rVm4UjPkAYHVAOJp92P/j4pVUse4Dro1yuYuJisTl4P2Gsn4QjwLpqnnBzreoC/bZcwZ3FLdy9v4WHyxVsbLr/f/lqqRk4En2KAOueN5Rdzfzx39v46Isyrlw3cDVv4FrewFTeQP4TEw9/r7gqkUzqgfBkHyGlCmCT8dpzO9Ye/YX3PjAa4NN5A2LewIxm4MGvT53v797Z3A2OdK8iwHI412lXD1wplcJiVvOFz2oGPvzYxMZG1anCLnBkehQBNXutu2p2PF1awmo4XFuLGc0TzmtuzsDPP205v5u+XPKFZ3sI46oA9nbVZPie27GxsOAI4LWU0Tzh2pyBm9+sO7/77FMzCI5ctyLAaiyOw00GCOD1fVprgM+/b+DmjR0BX31ZDoLj9S5FQK2rKfbKDue1BfUiVHh+1sD9eztbMHup5As/2UV4QxXALbXe29nhOKqmiWIk4inih7TmwHkVV7cdAadG9CA4TnUqAqx+7mosC0o5/arA68eUVoMvKtnf+24zEP5mJ+G0KoCHifquxt7O18mOrdu3fSvx57e/uNxwMvckGB4mnAnrOwKsSaahq7G3q8HbsXnrFspTU7XFB3R7ZcX1zVq5iisTxd3gONuhCLDGKM+Wyt6uViIo1qzv+O+180Vf+LkOHedVATzDBfVz9na2Vz8hvOdcds5cFTF9rugNb9cx0a4IsAbIpvo5OxybDN9zvmr1p50zd0SYVcyeLXrB8VabIqA2vf6XYSLY4WqZM9wWMXem6IK/3abjgiqAR+e9gtt7zpnbItbNKuZPF1U43gkpAnhu30u4veec+bolYvlBRYVjMqS73wrW3L5ncHvPOXOGf3297MDfbdULDVMxPxr2Gl635zacl/cDhR8N+w2/2KrnAl9H/GjguX0f4AXfzL2C53YenXl65QGSZzgeo3iS4WGC+zm3VO5q3FjY29le2eHYZPie81Xj095w4J6l+Bf3YyCF3A4A2gAAAABJRU5ErkJggg==" alt="Current (shipped) at 32 pixels" width="32" height="32"></div>
+              <figcaption>32px</figcaption>
+            </figure><figure>
+              <div class="cell"><img src="data:image/png;base64,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" alt="Current (shipped) at 48 pixels" width="48" height="48"></div>
+              <figcaption>48px</figcaption>
+            </figure>
+        </div>
+      </div>
+
+      <div class="toolbars">
+        <div class="toolbar light">
+          <span class="tb-dots"><i></i><i></i><i></i></span>
+          <span class="tb-omni">northwind.example/blog</span>
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACBUlEQVR42pWTS2tTURSFz0/IPzEqPlC0J83Da2pNtI1p06YVxQeWVkuRqmhLW0MQHSgIgoiCrUN/gTgRO44RRNuRw9azr4abRqShLlk3PZebVpQuyCSXb5+9115bqZB2D5no3qLR+weMPlgw+nC/6KN50bEzouM50ale0c5piaqt2jVsItEhU9lTNNg3aHCgYHCo3+BIn0DnBZ05QbJX4PQI0qcE3VmpZDMSCQrsEEY2I+g5KZWg7TA8MlfD8tcmrFa+bWDmnrcVRu6EIN8lUcWZwzD1abmJhdc/8fxVA5+XWsVKZa8N7usSFNKiFQ2zbfPl9cVFPLpdxZ2yh+myh5mShy9LTayubrTBA2nB4HHRim7bmam1qSmsOBk8vlX14dmSh/n5hv/t+lgtgIuOYNgRrbgqaxhVn5jAj0TCL/LkZhWlux4WXrYK3BitBfDZY4JzKdGKe7Zu0zCOwAK2yNPJKj5+WEdj7XcbfD4luJAUrRgSuyq6TbEIO/F/b9/7/71786sNvpgUXEq4WjFh4T3TbRpmxZcJU88e1AP4ctzFlbirlR/P7SHxDQvPTJh6cb/uwyOdLkZjrlbM9t9CEnbbtk2YejjuYSzm4qp2W3exme1/wrZtwpPd33Gtw60Et8DDYLb/B7Ntvkx4vMONbLtKZpvxZMIYEu6Zq6LbNIwzB21v6g/9cmwF6lcOCAAAAABJRU5ErkJggg==" alt="" width="16" height="16">
+          <span class="tb-label">light</span>
+        </div>
+        <div class="toolbar dark">
+          <span class="tb-dots"><i></i><i></i><i></i></span>
+          <span class="tb-omni">northwind.example/blog</span>
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACBUlEQVR42pWTS2tTURSFz0/IPzEqPlC0J83Da2pNtI1p06YVxQeWVkuRqmhLW0MQHSgIgoiCrUN/gTgRO44RRNuRw9azr4abRqShLlk3PZebVpQuyCSXb5+9115bqZB2D5no3qLR+weMPlgw+nC/6KN50bEzouM50ale0c5piaqt2jVsItEhU9lTNNg3aHCgYHCo3+BIn0DnBZ05QbJX4PQI0qcE3VmpZDMSCQrsEEY2I+g5KZWg7TA8MlfD8tcmrFa+bWDmnrcVRu6EIN8lUcWZwzD1abmJhdc/8fxVA5+XWsVKZa8N7usSFNKiFQ2zbfPl9cVFPLpdxZ2yh+myh5mShy9LTayubrTBA2nB4HHRim7bmam1qSmsOBk8vlX14dmSh/n5hv/t+lgtgIuOYNgRrbgqaxhVn5jAj0TCL/LkZhWlux4WXrYK3BitBfDZY4JzKdGKe7Zu0zCOwAK2yNPJKj5+WEdj7XcbfD4luJAUrRgSuyq6TbEIO/F/b9/7/71786sNvpgUXEq4WjFh4T3TbRpmxZcJU88e1AP4ctzFlbirlR/P7SHxDQvPTJh6cb/uwyOdLkZjrlbM9t9CEnbbtk2YejjuYSzm4qp2W3exme1/wrZtwpPd33Gtw60Et8DDYLb/B7Ntvkx4vMONbLtKZpvxZMIYEu6Zq6LbNIwzB21v6g/9cmwF6lcOCAAAAABJRU5ErkJggg==" alt="" width="16" height="16">
+          <span class="tb-label">dark</span>
+        </div>
+      </div>
+
+      <div class="note"><p>The icon in the manifest today: a lens with a red half. It works, but the bezel is thin and the red half meets the glass without a hard edge, so at 16px the disc softens into a single mass.</p><p><b>Keep it</b> only if you want zero churn — the concepts below were all built to beat it.</p></div>
+    </article>
+
+    <article class="concept" id="blind-lens">
+      <header class="concept-head">
+        <h2>Blind Lens</h2>
+      </header>
+
+      <div class="showcase">
+        <figure class="hero-fig">
+          <img class="hero" src="data:image/png;base64,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" alt="Blind Lens at 128 pixels" width="128" height="128">
+          <figcaption>128px</figcaption>
+        </figure>
+        <div class="sizes">
+          <figure>
+              <div class="cell"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACaUlEQVR42oWT20uTcRjHf39JeKKbyA6DooPHLQ9tpfOwtOmWTdRYRq1kEV38LEQiJInuBEW7EFIvukvqYhHLIG9q0AEKO0AN3+fdcE50M/et57ftZa83PfDC+/I+n+f4fYTI2QGvVn3Io0lLlyaPuDV57LwmT3SQrDxHssZF0tZOsq6VZGMLSbuTqkWhlXu1qYMeDZZuDWOPk/j8bRt5+726g+knG3B6dDS0EOxOwtlmgrOJpozMDFf16wa4E40iHQ4jtbio3tm+rmzD1aXnYbSeIbgcVC1U2d0aQssp5bg5M4O4zWY83v2dGL47q/5FIulCGB12koJ7dt+KKwfOWgg/P+nAnlIfikp8GB9/qnzujSQU3GknuE+TFDywiYUN9TPR328K0LrPreDiEh8qKoLKJ/RiKws3ErobSAqe9su32fIL4emjzQZcUuxDaZFP+Xx4n1awp4FwoZ6k4FVNzmUrWHO7jQDH93pNcFkuwPLrlIJ76gm+OpKC93z7fsI0wFFLmwk+XD6Ihw+yM5gYW1dwbx2h7xRJwSKxthOiqzvIrK/j17UhlJf1mDK/Wfqk4I1kBv6WWBa26Riw6lIohbUR/NfjSCYzynF+PoyhG5MY6HuEhbkwCi28uKXgS1Yd/lpdCpZnXmG9fTG169328V0a37/8Mb6Xnm3hcq2OKzW6FDltmxTmvxjDnZtrGAmuIeCNq54HnTH8KAgSmt/E1SpdCj6MXfI09pyfdr7nQFMMP3NBIq9SCFTq2aPiw/gfzD1z2UFHDLOjSQw741Omi+TDYG2zPFlhLBLeM6+Kp80D4565bCPzP/sLQsyQYImXsQgAAAAASUVORK5CYII=" alt="Blind Lens at 16 pixels" width="16" height="16"></div>
+              <figcaption>16px</figcaption>
+            </figure><figure>
+              <div class="cell"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAE4klEQVR42q2X/U+TVxTHn79kA3RZMqeguDGmwqW8vxcoFCilSgVh0PFSmEtMyBSNCwvKxGzZfpAtm9kPjizqlswRZc44WeKyzU1HIpkJ2w+Y5z6lpRShAt/lPLalT5+XYtKTnF+a9n5O7z33e75XEAwirVlke+wiS28S2d4mkb1uE1lGo8gyG0X2ZoPI9jVwdqCesywrZ9lWznLqODPVcpZby1m+hbOCGs4KazgTnid2OUSW2ixOpTWL2G0XkW4XsbdJxGs2ERk2EW80ishsELGvgWN/PccBK0e2lYPVcZjqOHJrOfIsHAUWjsIajqJqjpJqjtIqPlVujlPMToc4nuoQEQuv6PHgzBdL+PVBELHx8NFTXPruCVoHFozgKDNzVJg5Kiv5+JbhOW0Srv60gq3G738FYe/wGMFRVclRXRFThLztMfDGYwtYDGzgecO/tIGRMb8RHDXlHJbyqOOIPXM9+Oq1awgMD8Pvdsu5NDgof7bh96u+e/acXxdeW85RV8anors9Ai/v8ajgwdu34TWbsZCXp8r7rAg7drtw5sPLqiK6e716cFhLOSJXLbrhfry7qliE/rEWOJxdqVa8sM0pp3vgguK3jx+v68IbSjkaSzgT5Hsegref9Kq23Ag+nVUSgb+Y4kRSihMnhr5SrDE26teDw0YFhERGvuff3tzseDpXvW0PZ/UOmwJOmZzixPT0TGSdR/881YYXczQVcyaQwoVFxh919isTE4bwyf1lmvDkZCcG+pVH0dniUcHtxRzNRZwJsrzaRFR1e5TXye02LCDzZYcmPCXZibRUl2Kt4+/6tOBwUAGk7SSvnUPK8zeCf55h1oVTbktywucLRNb6+uKyGl7IcbCQM4EGC2l714mtFTBnKsCr2w8ZwrcnOfHg/lxkrYkvl1XwQ4UcLQWcCaGpBldMAT6bTbOA0+mWuHDK6PhkxK8Fh5MKoJFKU62kRVL8iFROS3R2hv69Ebyi5D3FWqfe8anghynzORNonodHKk22aPWLLcCVao0LfynJiXNnN1UxsLShCW/N52jL40wImQl5np//bEn3JpDoxIPb6odleHQD3vphRQcu4UiexARyMmEzUXlQkqdZONbn5yNiZHnFZgjvaD2vOR37mxc04e2UuRITZBsV5WQ+HlfuwtrsLK7XxN/2X+7MqODi/Do6qz2a8I5cCW9RASEPp3AykzeUJoS2dHT0siwwsfA9u1w46r6g2PbomJtdg6vKo4abJHSaJCaQgYy1UbV2Cff+DGouSPd7+s5MJLcSVESP2aOAd5kkuHIkJsjuVcfDXbnyBImKf2fX0FfpiYbjbSogZJ11PVxvjxc3rsf3hX//EcT7Az4MdngR8G/oFjFQ4XkGZxK6mcQE8u1xDKQ8zx31Ej44uYhLF5dxc3IFd39elSX20xE/+hwLiqt2vF2/iP8eruFomQc9TEJvtvTMF8aD681zLXkNd/vQES+WdYr4ZixAcEQ8IT0aEgkPd/upNu0ivh9fRl+2tGlK6cWSaHi420+3qov4qNsHd5akfCXRiyXR8HC3Dx/24t6tVcz+FsT4sUX0Z0naryN6sSQaTt0eajj0ZUn68HDQi4UeDQmHZ0tTqm2PF+TbyTqTeyUDSR6ObBQ5GTITNM9ppNJUo8FC2k7ySgpHIkP3PHLVdOJ/Ft0ncfTJQgUAAAAASUVORK5CYII=" alt="Blind Lens at 32 pixels" width="32" height="32"></div>
+              <figcaption>32px</figcaption>
+            </figure><figure>
+              <div class="cell"><img src="data:image/png;base64,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" alt="Blind Lens at 48 pixels" width="48" height="48"></div>
+              <figcaption>48px</figcaption>
+            </figure>
+        </div>
+      </div>
+
+      <div class="toolbars">
+        <div class="toolbar light">
+          <span class="tb-dots"><i></i><i></i><i></i></span>
+          <span class="tb-omni">northwind.example/blog</span>
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACaUlEQVR42oWT20uTcRjHf39JeKKbyA6DooPHLQ9tpfOwtOmWTdRYRq1kEV38LEQiJInuBEW7EFIvukvqYhHLIG9q0AEKO0AN3+fdcE50M/et57ftZa83PfDC+/I+n+f4fYTI2QGvVn3Io0lLlyaPuDV57LwmT3SQrDxHssZF0tZOsq6VZGMLSbuTqkWhlXu1qYMeDZZuDWOPk/j8bRt5+726g+knG3B6dDS0EOxOwtlmgrOJpozMDFf16wa4E40iHQ4jtbio3tm+rmzD1aXnYbSeIbgcVC1U2d0aQssp5bg5M4O4zWY83v2dGL47q/5FIulCGB12koJ7dt+KKwfOWgg/P+nAnlIfikp8GB9/qnzujSQU3GknuE+TFDywiYUN9TPR328K0LrPreDiEh8qKoLKJ/RiKws3ErobSAqe9su32fIL4emjzQZcUuxDaZFP+Xx4n1awp4FwoZ6k4FVNzmUrWHO7jQDH93pNcFkuwPLrlIJ76gm+OpKC93z7fsI0wFFLmwk+XD6Ihw+yM5gYW1dwbx2h7xRJwSKxthOiqzvIrK/j17UhlJf1mDK/Wfqk4I1kBv6WWBa26Riw6lIohbUR/NfjSCYzynF+PoyhG5MY6HuEhbkwCi28uKXgS1Yd/lpdCpZnXmG9fTG169328V0a37/8Mb6Xnm3hcq2OKzW6FDltmxTmvxjDnZtrGAmuIeCNq54HnTH8KAgSmt/E1SpdCj6MXfI09pyfdr7nQFMMP3NBIq9SCFTq2aPiw/gfzD1z2UFHDLOjSQw741Omi+TDYG2zPFlhLBLeM6+Kp80D4565bCPzP/sLQsyQYImXsQgAAAAASUVORK5CYII=" alt="" width="16" height="16">
+          <span class="tb-label">light</span>
+        </div>
+        <div class="toolbar dark">
+          <span class="tb-dots"><i></i><i></i><i></i></span>
+          <span class="tb-omni">northwind.example/blog</span>
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACaUlEQVR42oWT20uTcRjHf39JeKKbyA6DooPHLQ9tpfOwtOmWTdRYRq1kEV38LEQiJInuBEW7EFIvukvqYhHLIG9q0AEKO0AN3+fdcE50M/et57ftZa83PfDC+/I+n+f4fYTI2QGvVn3Io0lLlyaPuDV57LwmT3SQrDxHssZF0tZOsq6VZGMLSbuTqkWhlXu1qYMeDZZuDWOPk/j8bRt5+726g+knG3B6dDS0EOxOwtlmgrOJpozMDFf16wa4E40iHQ4jtbio3tm+rmzD1aXnYbSeIbgcVC1U2d0aQssp5bg5M4O4zWY83v2dGL47q/5FIulCGB12koJ7dt+KKwfOWgg/P+nAnlIfikp8GB9/qnzujSQU3GknuE+TFDywiYUN9TPR328K0LrPreDiEh8qKoLKJ/RiKws3ErobSAqe9su32fIL4emjzQZcUuxDaZFP+Xx4n1awp4FwoZ6k4FVNzmUrWHO7jQDH93pNcFkuwPLrlIJ76gm+OpKC93z7fsI0wFFLmwk+XD6Ihw+yM5gYW1dwbx2h7xRJwSKxthOiqzvIrK/j17UhlJf1mDK/Wfqk4I1kBv6WWBa26Riw6lIohbUR/NfjSCYzynF+PoyhG5MY6HuEhbkwCi28uKXgS1Yd/lpdCpZnXmG9fTG169328V0a37/8Mb6Xnm3hcq2OKzW6FDltmxTmvxjDnZtrGAmuIeCNq54HnTH8KAgSmt/E1SpdCj6MXfI09pyfdr7nQFMMP3NBIq9SCFTq2aPiw/gfzD1z2UFHDLOjSQw741Omi+TDYG2zPFlhLBLeM6+Kp80D4565bCPzP/sLQsyQYImXsQgAAAAASUVORK5CYII=" alt="" width="16" height="16">
+          <span class="tb-label">dark</span>
+        </div>
+      </div>
+
+      <div class="note"><p><b>The instrument is intact; part of what it should see is missing.</b> Thick white bezel and handle, deep-navy glass, and a straight chord cut across the field of view with everything past it dead red.</p><p>The glass is the brand gradient darkened to 42% rather than left as tile colour — that gives the disc mass, so the circle survives at 16px instead of depending on a hairline. The bezel stays closed on purpose: the blindness is <em>inside</em> the field of view, not a bite out of the object.</p><p><b>Honest caveat:</b> the bezel loses even weight where red meets white, and the handle merges with the ring into one white form at 16px.</p><p><b>Rejected:</b> a centre-apex pie wedge (read as an analytics chart); letting the wedge eat through the bezel (red bled into the violet and the circle became a blob).</p></div>
+    </article>
+
+    <article class="concept" id="half-blind-bot">
+      <header class="concept-head">
+        <h2>Half Blind Bot</h2>
+      </header>
+
+      <div class="showcase">
+        <figure class="hero-fig">
+          <img class="hero" src="data:image/png;base64,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" alt="Half Blind Bot at 128 pixels" width="128" height="128">
+          <figcaption>128px</figcaption>
+        </figure>
+        <div class="sizes">
+          <figure>
+              <div class="cell"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABkUlEQVR42q2TTUsCURSG27RvUy2zRYtoY1kxZcaYNaONmmaNmR9kRSBFtYwKf0qugqB1iyA4P6HA2uYPuOciLoJw84bS1VEhMnrhLp/nnnvuOQMD/5WZrHB5MqI0nxak7QryppiWk0x+mymwzWQkmEKbTFacS9EYuzrg6axwe7KiOpcW0HYFvCmGL8nQbUZgm2FsMYKbDCvOiMYY8Q2uJiLsbgk8GVHpA0YiwrDDXGkJ/gAjZTFaAgXf3H/g+a2Ol7c6HukTW1mJUPgd2vg+ZkdNzI2a0CeLTTgdcgjUzd25uK5hzfeAqcGhjtOAc0GHQJXdncurGsylXkEDzpsOgXpzd66vagh5ewUN+NBwCFTDulO8rMFa7BU04KNV2Raobt/efaBcruO1XAc9fSKflLCNd/jGDqCNmFgYNhGcKDbhQsAh+OmrVMNU2Qo+WXEIrDhX+oVP/bI9SNEYu7/H83ewLqvnunR37EMiwi47zKUdiym9zpQLMu2ZTAcG09EqUyEg6XhF0qlfls506fq3Lf4ChOzeCRXaVW4AAAAASUVORK5CYII=" alt="Half Blind Bot at 16 pixels" width="16" height="16"></div>
+              <figcaption>16px</figcaption>
+            </figure><figure>
+              <div class="cell"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAADP0lEQVR42u2Xy24TVxzG2bAoK79AS5a9qJUgIQ7YTo7Hl/EliW+xHd9gwNySQBJAXTRJ4fAEeYqS8ADTTaWqEg/g9gnyAOcbaqsJ6oqvstQM43HMDEL2Bj7prH8/ncs3/zl37nNG5HJLBaabyphpKjnbUDLYUHKuruS1mpKhGmR4FXK+CrlQhYxWILUyZKwMmViBTJYg9RJkugiZKcLIFhDwDb7UUoHLLbU/3VKcaSpeaSgGG4pzdcWrNcVQDQyvgpEquFAFRQXUKmCsDMZXwOQKqJfAVBHMFMFsAVzMg8t57OdyHiJ9+KWW6owBzlwOLOTQKS6/R2LMcBaXwdISOqPO3JgAnOUlsLIIY0hguqWOJgRnNYujQXhTTU0QzloWrGcwZQvMNJWYMJyNDIQtMNtQ4iz45vMut553uS27fCS7fPysxyfPemytvR6Cp/Q/mYiYTEZM6mGTqbDJdMhkJmQOw9NgM+0QCNaVcMN//eNfjso/x2+58eRvG57UXvH7C1/xu/OBM1f4YnsA3kqD11MOgat1Jdzb7pVfDk/sbQ9/+3Qk/HS54LzhFLhWU8J95n4ETs884kNgAK6Dhu4QCNUg3BfOKy8OT+wLN+9DwAm/qYO3kg6ByCqE+7Z75eDgxL7tfgRccLadAvNVCPdT8yNw+tQWvvEWcMJv91fCIbBQhXC/c68cHryx37nwIeCE30mAd+MOgWgFwl0yXnn54o1dMn4EBuEW78WtdwJaGcLdcH4EThsu+rW3gBN+v79iDoFYGcJdr7/9PrqIjo/f8sfNrt1w+flX/OGL0UUkvmwPwNdiFtedAokViLO6/ae9Hnf2etzd7XFvt8efd3p8utPjevv1UL2Wo38xP2eyEDRZDJoszZosz5qsXDGH4ZrFDc0hkCxBfNSHxVUywxduEP5As/gw6hDQS5iaMJybUWtqYCbIFHE0MbiwjoYmomwBxoTg3BKWceZcuJxHZ9zwbWF1Rk7F/bn9/9F5bPBtYb3/36A/t5eWsD+Gbd/3hDtTWUSgmoWxmoWsZyAbGchmGvJ6CvJGCtLQIW8lIdtJyDsJyLtxyHtxS67FLLmuWXJDs+TDqCU3o5ax9SHgTy7/AdcomC3rXUx2AAAAAElFTkSuQmCC" alt="Half Blind Bot at 32 pixels" width="32" height="32"></div>
+              <figcaption>32px</figcaption>
+            </figure><figure>
+              <div class="cell"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAECUlEQVR42u2ZS2sbVxTHs+kim6BNSTcJ2nXhUBM/5Ld99dboYVnS6DF6JLKdp5M2+gThfIB+gEKhXhQK7QfoqpR+g0Kdbqttm/sftKhTgiA9ZSwXiuZeJTNJlRH4wH//+4l7zzmae+nSRV3U9GqxLcNLbSmW27IXaUlystKUtNqUtGZJWrckbVigzQZoqwHaroN26iDhpAaK1kCxKiheBSVMUNIEpUxQugLKVNAzyhBGGeF3Cn2zI0MLHUmLHdlfakt2stySHGlJXmlKXm1KXmtKXrckb1jgzQZ4y0kdvF0H79TBogaO1sCxKjheBSdMcNIEp0xwujJKpgw2yuBsCZwroZ8vgQp7CL0tfHehIweLnRH4lOA5XwIX9sC7exgUi+j6hT9e6Eh+j/BcLIL3iuBSEcezDM+lXXB59w0lzo9N0OC5UgCbhdccp/MLOwgoPFfzGNTyEy72ebcJKjzX8uB6HqTv89NtlX7guZFDf9KQCjo8W06yimHnTNhZgG9mzyJcAsvOijAb8NxSCURaUswEvAFuGwqBlZYUOnjjwObvf3rJf774myfV789f8dffvtDCb8495fkrczz3QUibTy5f543wIZvp33Tw3FEKNKXQ/fI//zpkL/XFV6cu+O35zyeCjydyNa2D51sZhcBqUwrdsfFavzwbuo7N0kdpTwJONPB8WyWwZkmhO/N+BMbPvF8BBTx30wqBdUsK3YX1LHAydF1YPwIaeLXAhgWh6zZ+BMa7zdJV7wIq+P1R3AKbDQhdq/RaJydDV6tc9iGggj9IncUtsOUIaPq8H4HxPu9HQAV/OIpbYLsOoRtSfgTGh5QfARX8HSdJhcBOHUI3Yf0IjE9YPwIaeL6rEhA1CN164EtgbD3wI6CB53sJhUC0BqHbbbzWs5Oha7eJ+BBQw9t8P2GrBXSLmR+B8cXMj4AGnh+oBGJVCN1W6UdgfKv0I6CEj9v8MK4QiFchdCuxsxp4qeMvT10rcfKGt2Vu7cO0Dp6PVAIJE0K3z1fbNv/w40s+PZ28Tj//4xV/981f2n0+/vFTvnnlxkTw+cvXWVw75P1oXwfPRzGFQNKEmNKfEe2E1Z75/8A/ip3FLZCqQMwC/GMnUYVA+lwg6PCfRs/iFshUEJ4F+M9GUb8hGGX0Aw8v7L72y1y2BAo4PD8Rtv7TYq6EUL6EQYDhBz1hT361KeyhG1B47gn7zV5rikUcBxDe2yuN86wzs/D/VnkX3UoBg/d85rtv9VJpFhCq5kG1PPrTbJVOt3nthfVajRzCjRyElUWvmQW1DFDbAHUM0K0M6HYG1E2D9p2kQAcp0GEKdCcJupsE3UuA7idsepCw6WHcpqO4TY9iozyO2j1nwmqH1EVd1P9T/wBQztimI7aLNgAAAABJRU5ErkJggg==" alt="Half Blind Bot at 48 pixels" width="48" height="48"></div>
+              <figcaption>48px</figcaption>
+            </figure>
+        </div>
+      </div>
+
+      <div class="toolbars">
+        <div class="toolbar light">
+          <span class="tb-dots"><i></i><i></i><i></i></span>
+          <span class="tb-omni">northwind.example/blog</span>
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABkUlEQVR42q2TTUsCURSG27RvUy2zRYtoY1kxZcaYNaONmmaNmR9kRSBFtYwKf0qugqB1iyA4P6HA2uYPuOciLoJw84bS1VEhMnrhLp/nnnvuOQMD/5WZrHB5MqI0nxak7QryppiWk0x+mymwzWQkmEKbTFacS9EYuzrg6axwe7KiOpcW0HYFvCmGL8nQbUZgm2FsMYKbDCvOiMYY8Q2uJiLsbgk8GVHpA0YiwrDDXGkJ/gAjZTFaAgXf3H/g+a2Ol7c6HukTW1mJUPgd2vg+ZkdNzI2a0CeLTTgdcgjUzd25uK5hzfeAqcGhjtOAc0GHQJXdncurGsylXkEDzpsOgXpzd66vagh5ewUN+NBwCFTDulO8rMFa7BU04KNV2Raobt/efaBcruO1XAc9fSKflLCNd/jGDqCNmFgYNhGcKDbhQsAh+OmrVMNU2Qo+WXEIrDhX+oVP/bI9SNEYu7/H83ewLqvnunR37EMiwi47zKUdiym9zpQLMu2ZTAcG09EqUyEg6XhF0qlfls506fq3Lf4ChOzeCRXaVW4AAAAASUVORK5CYII=" alt="" width="16" height="16">
+          <span class="tb-label">light</span>
+        </div>
+        <div class="toolbar dark">
+          <span class="tb-dots"><i></i><i></i><i></i></span>
+          <span class="tb-omni">northwind.example/blog</span>
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABkUlEQVR42q2TTUsCURSG27RvUy2zRYtoY1kxZcaYNaONmmaNmR9kRSBFtYwKf0qugqB1iyA4P6HA2uYPuOciLoJw84bS1VEhMnrhLp/nnnvuOQMD/5WZrHB5MqI0nxak7QryppiWk0x+mymwzWQkmEKbTFacS9EYuzrg6axwe7KiOpcW0HYFvCmGL8nQbUZgm2FsMYKbDCvOiMYY8Q2uJiLsbgk8GVHpA0YiwrDDXGkJ/gAjZTFaAgXf3H/g+a2Ol7c6HukTW1mJUPgd2vg+ZkdNzI2a0CeLTTgdcgjUzd25uK5hzfeAqcGhjtOAc0GHQJXdncurGsylXkEDzpsOgXpzd66vagh5ewUN+NBwCFTDulO8rMFa7BU04KNV2Raobt/efaBcruO1XAc9fSKflLCNd/jGDqCNmFgYNhGcKDbhQsAh+OmrVMNU2Qo+WXEIrDhX+oVP/bI9SNEYu7/H83ewLqvnunR37EMiwi47zKUdiym9zpQLMu2ZTAcG09EqUyEg6XhF0qlfls506fq3Lf4ChOzeCRXaVW4AAAAASUVORK5CYII=" alt="" width="16" height="16">
+          <span class="tb-label">dark</span>
+        </div>
+      </div>
+
+      <div class="note"><p><b>It is looking, and only half-registering.</b> A rounded crawler head with two identical eyes — same shape, size and baseline — one pure white, one an extinguished socket.</p><p>This one was decided by measurement rather than taste. Solid <code>#ef4444</code> on the gradient body is only <b>1.5:1</b> luminance contrast — it separates by <em>hue alone</em>, which antialiasing destroys at 16px and colour-blind users never receive at all. So the dead eye is near-black burnt red <code>#2b0510</code> at <b>3.2:1</b>: full contrast at 16px, still visibly warm at 48 and 128. The lit eye measures 5.7:1.</p><p><b>Strongest at 16px</b> of the four — three shapes, maximum contrast, no fine detail to lose.</p><p><b>Rejected:</b> a visor slit (read unmistakably as a UI toggle switch); circular eyes (soft edges); a red core inside the dark socket (maroon sludge); a shut-eye dash (cute, and a hairline).</p></div>
+    </article>
+
+    <article class="concept" id="two-layers">
+      <header class="concept-head">
+        <h2>Two Layers</h2>
+      </header>
+
+      <div class="showcase">
+        <figure class="hero-fig">
+          <img class="hero" src="data:image/png;base64,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" alt="Two Layers at 128 pixels" width="128" height="128">
+          <figcaption>128px</figcaption>
+        </figure>
+        <div class="sizes">
+          <figure>
+              <div class="cell"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABQUlEQVR42q2TQUrDQBSGex7boCLSFKlGG2IkrVSNkdpUEAdBEPEQWSr1FN5C9ASCC8lCqSDdzQseoMIvL9V2apLZ6A+zGeb73szLS6n0X1nsyXAplPFyV8I8lFjpEOoHBCsgNPYJjk9wdwneDsXbbQqzcE/iN/zonuDDtjPryRHYaymSosp8+G7Nx1VN4JqXKXC/6qf7QZPiiaDo2nyQ4TkjQsWIYFQi9E2R7nc8wkRQ9GY+yJV/4PlyhH51LOhuKQJNw+C1hqhVb1N4oRzh5ltw5CoChl/eRsjLYDBC2xumlRl+qI97cLypCLiyLkGTZr7Csy0gHEXA19aFG8Zv5mtzZYZP7WQq4DfrkgefNRQBN0yXPPh8QxHweOoEefDFejIdJJ5t7nZe3l8/s7CV4NJKZv8Hnm0ez6KGqZUz8F/yBQvTGyHzH/m8AAAAAElFTkSuQmCC" alt="Two Layers at 16 pixels" width="16" height="16"></div>
+              <figcaption>16px</figcaption>
+            </figure><figure>
+              <div class="cell"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACg0lEQVR42u2XzW4SURiGexm9BPtDLVCjRk2xDC0yTGGAghSmRqNGjT9158qNGIwLE5PGO+EyuuIK/ElYnG+iMEtiX/M1cwwwh+mcYalvcnbkPM/5++Zjael/FEk6YjnliG7aEf2tthhfaQlcbQlcOxS43hS40STcvEu41SBsNwiZOmGnTsgeEIwaYbdG2KsS8hUaFyrUN23qWmVajgTfPBLtpCO8tCOw1RZYAI5ChWDahGKZsF8mr1SidhQ4osDf2D18zdn4aRiRxrecjfdmD5X9ORK87Tor14HL8T1no2qRV7MUx+GfeeRt14XLcWAR6kXqBgT8Cxf5zCcnvbTRwYo/VhMdrCU6WOex3kFivTP123qR0DCpHxDQve2Tk4bBN2YEGiahadI4IKB722cF5sEvr00LNE3CYYEQENB9apOThsFnBRjeuqMQ0H3nk5OGwTdnBBjuqATiFplKeQAjd4pU6kQJT65OCzD8KK8QWKDCoVQilKwB0smTADw1I8Dwe3sKAQl/+2mEX6PfiJrh8AwfP4y4wiGfPQ3AUyvTAgy/rxKQK9eBT0pULUKzOLiwEDH8wa5CQG573PgVLhT+w7DP4Q9VAvLM48avcKHwz7neOfxRTiEgL1zc+BXu7zuXt12euVw5wx8bblBA3va40YE/UQnIpxY3OvCnWYWAfOdxowN/tqMQkEUmbnTgz1UCfgMZW0AH/uK2G/wc+91rbAENOF5m3GBDwq0z1/a40YDjVcYNtmTct3PrzGVVN97wLDL8OON6xxlX/R+B+3b+sOhIMPzLOy8qHK+33fD/Bty3c+ssa7tuhQtb+YVwGe7buXXm7pUbyAXgY75wfOZzt/2fzx+IiF8g8KXisQAAAABJRU5ErkJggg==" alt="Two Layers at 32 pixels" width="32" height="32"></div>
+              <figcaption>32px</figcaption>
+            </figure><figure>
+              <div class="cell"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAD4klEQVR42u2Z205TQRSGfRwEOYoKcihgwZ7b3W6oFIon8HziHZpwgaC8gndqYmKNNzZG34AL73wBxb0aL5pYExJ+s+psM5TuYbd7Jt7wJ+uy3d8/na75Z69Tp050IvMaLDrDQ0Vn82zR2R1edmrDyw7OLTk4v+TgQsHBSMHBaMHBxUUHY4uE8SuECa48YTJPCOUJUwuE6QXCzDzh0jwhbBNmbcKcTbic+1uRLNWiWdqNWbQZt2g4MPjAitM1WHQqQ0UHZ4sOGNwgPKJZQswixC1CwiIkM1RJZairU3h7sOjU/iM8UhlCOk21TJrsTuD3O4Wfzu/hRWIL32YT+BkOd1z8+ZfRLeRSe/tWyqcJsW0CrTzDBwFvrleRbWRTVMslfWwnHXs+6Mo31/dwArkkwU5SxU+3CbzndcK7ZScJ8wnCQkLRnUSrDPyHbX74x5CNzdFVPG2qLbdG/ta2qE+T9pHvEPDIJ2jT04Do84G7TfPDGb6rr4TTorq5ekvoEXWG60wJvaLYRPN3CHhcidOupwFdh1Tzw3m1/cL3eRgQ8FiMU01lQEuf9zLgB76vp4RnLQwIeBRiBE8Dug6pVgb8wvd7GHDhlQZ0nbAtDfiEbxi4cNSAC78UVRjQFQ+aH86dxi/8gMIAwy+rDOjKNl4G/MBzPW9hwIUvqgyYCGbpzB6ysS8YGy+jt2/jWPjB7tYGXPiViMKA4VSJWPQrBvq3lfBeBlz4qyoDJuEzaYKVJsQjX9Hfu+EJP9Rdwk4LAy78tcsKA4cicYHw+n0dv+oHCKJ6/QDlch05i2CliFMlQhfLnvBeBlz46yoD8sozvE69K9cb8JwqFyNfGp2G67lUO6I+TxzNQi78jTmVAWnbBF35Vr+EiMTIJ/baTqMu/E2VAXnPm5AUidu+D7jwqyoD8h/WhKRI3JaBt7Pb/+BXZxUG5G5jQlIk9r3yDL829+Mf/JrKgNwqTUiKxIeyjXxIyd1G3jYu/K1w1duA3OdNSAf8bZUB+ZAyIR3wdy4pDMgnrAnpgL+rMiDHA1MGgsLfUxmQs40J6YC/P6MwIAczE9IB/+A4A26qNCEd8A+nFQbE+/lGJDYhHfAPp6ver1XEcKGR500oKPwjrqmq94stMRlpXEZMSAM8Hk9VvV8t8ljHvUmZkAZ4PJmqqkdPYqzTyO869fvXgQ74yrHzAZ5J8ViHr4E69eFNPSh8bT1U9Tcv45lUzqJ9vgYG/SV45Rl+LVoNAr+/Hqq2NyfjmZQY6xy6SemKxG2uvN3RpJJnUjzW+Y/wFd/bRiUe6/BkhIcL/H7eFDwfUtznuVUe221OdCI9+gNp+b/X4rArKQAAAABJRU5ErkJggg==" alt="Two Layers at 48 pixels" width="48" height="48"></div>
+              <figcaption>48px</figcaption>
+            </figure>
+        </div>
+      </div>
+
+      <div class="toolbars">
+        <div class="toolbar light">
+          <span class="tb-dots"><i></i><i></i><i></i></span>
+          <span class="tb-omni">northwind.example/blog</span>
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABQUlEQVR42q2TQUrDQBSGex7boCLSFKlGG2IkrVSNkdpUEAdBEPEQWSr1FN5C9ASCC8lCqSDdzQseoMIvL9V2apLZ6A+zGeb73szLS6n0X1nsyXAplPFyV8I8lFjpEOoHBCsgNPYJjk9wdwneDsXbbQqzcE/iN/zonuDDtjPryRHYaymSosp8+G7Nx1VN4JqXKXC/6qf7QZPiiaDo2nyQ4TkjQsWIYFQi9E2R7nc8wkRQ9GY+yJV/4PlyhH51LOhuKQJNw+C1hqhVb1N4oRzh5ltw5CoChl/eRsjLYDBC2xumlRl+qI97cLypCLiyLkGTZr7Csy0gHEXA19aFG8Zv5mtzZYZP7WQq4DfrkgefNRQBN0yXPPh8QxHweOoEefDFejIdJJ5t7nZe3l8/s7CV4NJKZv8Hnm0ez6KGqZUz8F/yBQvTGyHzH/m8AAAAAElFTkSuQmCC" alt="" width="16" height="16">
+          <span class="tb-label">light</span>
+        </div>
+        <div class="toolbar dark">
+          <span class="tb-dots"><i></i><i></i><i></i></span>
+          <span class="tb-omni">northwind.example/blog</span>
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABQUlEQVR42q2TQUrDQBSGex7boCLSFKlGG2IkrVSNkdpUEAdBEPEQWSr1FN5C9ASCC8lCqSDdzQseoMIvL9V2apLZ6A+zGeb73szLS6n0X1nsyXAplPFyV8I8lFjpEOoHBCsgNPYJjk9wdwneDsXbbQqzcE/iN/zonuDDtjPryRHYaymSosp8+G7Nx1VN4JqXKXC/6qf7QZPiiaDo2nyQ4TkjQsWIYFQi9E2R7nc8wkRQ9GY+yJV/4PlyhH51LOhuKQJNw+C1hqhVb1N4oRzh5ltw5CoChl/eRsjLYDBC2xumlRl+qI97cLypCLiyLkGTZr7Csy0gHEXA19aFG8Zv5mtzZYZP7WQq4DfrkgefNRQBN0yXPPh8QxHweOoEefDFejIdJJ5t7nZe3l8/s7CV4NJKZv8Hnm0ez6KGqZUz8F/yBQvTGyHzH/m8AAAAAElFTkSuQmCC" alt="" width="16" height="16">
+          <span class="tb-label">dark</span>
+        </div>
+      </div>
+
+      <div class="note"><p><b>The page you see and the page the crawler gets, offset.</b> A solid white slab pushed down-left, and behind it a hollow plane outlined in red with a darkened void inside.</p><p>Offset is 5/16 of plane width — enough to stack, not enough to hide the rear. The layers are separated by a 1px knockout ring in the gradient so they never merge into one blob, which is the failure mode for overlapping shapes at 16px.</p><p><b>Honest caveat:</b> it is the most abstract of the four and sits closest to a generic “duplicate / copy” icon. It says <em>two things differ</em>; it does not say <em>crawler</em> or <em>blindness</em> on its own.</p><p><b>Rejected:</b> a white rear outline (read as duplicate); a 2px stroke (swallowed the void).</p></div>
+    </article>
+
+    <article class="concept" id="vanishing-page">
+      <header class="concept-head">
+        <h2>Vanishing Page</h2>
+      </header>
+
+      <div class="showcase">
+        <figure class="hero-fig">
+          <img class="hero" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAEGElEQVR42u2ay04cRxRA+R5wnDiOE8cYDHjMc4Ax7wEGZkJCiINJ/H7u8iHzCf6MRIoUBLJJdkhsq0bes7lW051VRBUU6oi6dY50v+Ccnumuul1dAAAAAAAAAAD/Az1NU+tpmnZP0+xeaRr5bD2fq+tGPl/L54s1I9eyaRj5smHkejarRr5aNXIjmxUjXxfzzbKRm8V8u2zkVj2f3rqV20v59C1Z6V/M586ilYGFfAaLGZq3creYypyVe8UMz1oZKWZ01srYTD7jM1Ym7udTzaZmZbJmZSqbaSvT01ZqxdyfsjJTzOyk3Z2btO25SVtLTnx3y9S6W+awp2kkmwTly1wx81UrC1V7uFBNJITulml3t3LxyD+RfzKL2UzYtnb575B/qnxZmrBSn7DvePLTlS/1cSvL48p+CYr/fOSfTb6sZDOm6J2AF75zy5fVMXuo6VMP+eeTL418ahoCaLvk921Z+fPvY0mND/vHsrHQOV3+qJW1UQXvAr5DnhTl/8vB/rFLvqyP2t3oA/D97KeOQ/7JRB+A7z8/+QAc8psjSgJwvfCljkt+S0MAvrf91HHJVxGA71Mv+QAc8r8bVhKA6zs/dVzyVQTgO+RJHZf8DQ0B+E74COB0+d/f0xCA53g3dVzyVQTgO9tPHZf8HzQE4LvYIYDT5W9WNATgudVLHZf8zUon/gB8V7p/HaR7GfTP3rFT/o8aAvDd5w9v2CQjyORvz3Sc8rdUBJDqMofnhM/35Gfyt+4qCAD54fJ/0hIA8sPkP9AQAPLD5T8YUhAA8sPl/6wlAOSHyd/WEADyw+VvDyoIAPnh8h9qCcAlv9rqyO6Hy3cQdMa9/VLl72gIwPfkX0b559jbL1W+igB8P/ux7+2XKf+XASUBuP7zY9/bL1O+igB8L3yx7+2XKf9XDQH43vZj39svU/6jO0oCcH3qxb63X6Z8FQH4vvNj39svU/5jDQH4Dnli39svU/6TfiUBuE74Yt/bL1O+igB8x7ux7+2XKf+plgBcZ/ux7+2XKf9Zn4IAfBc7se/tlylfRQC+W73Y9/bLlP9cSwCuK92995f3Mugse/tlyn+hIQDfff58oyP7lzCCs+7tlyn/xW0FAaS8zHFR+S+1BID8MPmvNASA/HD5r3oVBID8cPmvtQSA/DD5KgJAfrj8N7cUBID8cPlvtQSA/DD5KgJAfrh8FQEgP1y+mgCQHyZfRQDID5evIwDkB8tXEQDyw+WrCAD54fJ1BID8YPkqAqhPHcnvIzvysVJhzjH7QzvyW+9R/AEg/2IRRB8AIi82BEAABEAABEAAsfLHMC+BSb8ENqpHQgQJfwYCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMB/+ARfP/uNprZfawAAAABJRU5ErkJggg==" alt="Vanishing Page at 128 pixels" width="128" height="128">
+          <figcaption>128px</figcaption>
+        </figure>
+        <div class="sizes">
+          <figure>
+              <div class="cell"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAiElEQVR42mNgoCbQTng9Xz/u9X/TmNf/rSJf/7cPf/PfJeTNf8+gN//9/N/8D/F98z/S+818nAaANBMCcR5v/uM0AGQzIZDshscAPM4G2wzSnOH8FrcBIM24nA3TnOeIxwCQzbicDdNcbIfHAHzOhmmusMFjADGaa6zwGPDexeU/MZhhFAwyAAB2/glmtmuf2wAAAABJRU5ErkJggg==" alt="Vanishing Page at 16 pixels" width="16" height="16"></div>
+              <figcaption>16px</figcaption>
+            </figure><figure>
+              <div class="cell"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABJ0lEQVR42u2S3UoCURSFfQSfQwlBCMHsx5wydXKwRJssS4IIBAkkkOhd5umC4GwJmvF2Vky0IWQCz55zE50F5/r79lkrl7P5JYWJyhdvVbB1o1AaK5SvFbavFCqXClVfoXZB2B8S6gOC0yc0zwmtM4LbI3Q9Qq9L6J8Shi4Ffofy2gIm4AOX4HcIozYF2gIM/1jFkGYVxRi1COMTgrYAX541CXzSFAjwt2dNAr87Fghw52GWCsL4C37vCATEg/vunC9P4A+Npb6ASfj0UCDA8DCKtdaeBp/VBQJ8ue7a0+CPBwIB/nbdtafB53sCAe482qSCH2tPgz/tCgSyDG4dvqgJBEzCn3cEAibhL1WBgEm4SOD1yMO74xh5bw3vDwrY2NjY2PybfALC1SSCWeGUYgAAAABJRU5ErkJggg==" alt="Vanishing Page at 32 pixels" width="32" height="32"></div>
+              <figcaption>32px</figcaption>
+            </figure><figure>
+              <div class="cell"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABqUlEQVR42u2V20oCURSGewSfw6SIKEIz0yZTx1PmMc1GMoqIIoqI6l18JKmrTpJ1u1fMA8zF340TuyAGYu0Zgv3B3H/fnrX3mprSaPwh3BOhaUsMIpawZ3YFZrsCczsC8x2BhY7AYltgaVsg2hKINQnxJiHRICTrhFSNYFQJ6Sohs0XIVgjmJqFQJhRLhHKJUCkSqgWy63kaNEwKscuHe2IYsQQUyqOWJzRMQsukYTvHGDE5eb/k0c4ROlkasAXIY/Pw5kAV45HjyqObIZstQD551UzkYW0Q2ALksVGNK9/jDJBnXjWu/F6aMUC+sKpx5ffXGQPk1+ZprO4Sv784X/IHxgdfgMKn8tvMy/KHa4wBQcgfpRgDgpA/5gyQ5Z9fHY4l5Sl/kmQMkE+ea0l5yZ+uMgbIY8O1pLzkzxKMAfLMcy0pL/nzFcYA+cJyLSkv+QvOAPm1Gf3xEv9cUl7yl3HGAJVP5W/yV8uMAUHIX8cYA4KQv4kyBgQhf8sZEIQ8a0AQ8qwBd+k+bMPw9XtM9fkC/JZ3P7aA+//+BzQajUaj0Wg0Go1Go4BPX6dOZ/VvFhkAAAAASUVORK5CYII=" alt="Vanishing Page at 48 pixels" width="48" height="48"></div>
+              <figcaption>48px</figcaption>
+            </figure>
+        </div>
+      </div>
+
+      <div class="toolbars">
+        <div class="toolbar light">
+          <span class="tb-dots"><i></i><i></i><i></i></span>
+          <span class="tb-omni">northwind.example/blog</span>
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAiElEQVR42mNgoCbQTng9Xz/u9X/TmNf/rSJf/7cPf/PfJeTNf8+gN//9/N/8D/F98z/S+818nAaANBMCcR5v/uM0AGQzIZDshscAPM4G2wzSnOH8FrcBIM24nA3TnOeIxwCQzbicDdNcbIfHAHzOhmmusMFjADGaa6zwGPDexeU/MZhhFAwyAAB2/glmtmuf2wAAAABJRU5ErkJggg==" alt="" width="16" height="16">
+          <span class="tb-label">light</span>
+        </div>
+        <div class="toolbar dark">
+          <span class="tb-dots"><i></i><i></i><i></i></span>
+          <span class="tb-omni">northwind.example/blog</span>
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAiElEQVR42mNgoCbQTng9Xz/u9X/TmNf/rSJf/7cPf/PfJeTNf8+gN//9/N/8D/F98z/S+818nAaANBMCcR5v/uM0AGQzIZDshscAPM4G2wzSnOH8FrcBIM24nA3TnOeIxwCQzbicDdNcbIfHAHzOhmmusMFjADGaa6zwGPDexeU/MZhhFAwyAAB2/glmtmuf2wAAAABJRU5ErkJggg==" alt="" width="16" height="16">
+          <span class="tb-label">dark</span>
+        </div>
+      </div>
+
+      <div class="note"><p><b>A page that stops existing partway through.</b> Two chunky content bars on an indigo→violet page that ends in a hard red edge, with nothing below it.</p><p>Two bars, not three — three turned to mud. Every edge snapped to the 1/16 grid so 16px lands on whole pixels instead of blurring.</p><p><b>Honest caveat, and it is the real one:</b> at 16px this reads as “blue box with a red footer” before it reads as “page that stops”. Empty margin in an icon is invisible as a design element — the viewer sees absence of icon, not absence of content. The void only does its work once you already know what you are looking at.</p><p><b>Rejected:</b> a red line overhanging both sides (read instantly as a laptop on a stand); three bars; non-grid proportions.</p></div>
+    </article>
+  </div>
+
+  <footer class="page-foot">
+    <b>To adopt one:</b> copy its four PNGs over <code>ai-crawlability-lens/icons/</code>.
+    The manifest already points at <code>icon16/32/48/128.png</code>, so nothing else changes.
+    Generators live in <code>tools/icon-concepts/</code> and are dependency-free — re-run one to
+    tweak a colour or proportion.
+  </footer>
+</div>
