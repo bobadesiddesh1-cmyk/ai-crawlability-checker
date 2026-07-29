@@ -83,22 +83,30 @@ const G = {
   // Cornice — the overhanging cap. Architectural cue that says "building
   // front" rather than "board", and it gives the silhouette a T-shouldered
   // top so the wall can never read as a letterform. 1u overhang each side.
-  cornX0: 1,   cornX1: 11,   cornY0: 1,   cornY1: 3,
+  cornX0: 1,   cornX1: 10,   cornY0: 1,   cornY1: 3,
   // The wall of the flat.
-  bodyX0: 2,   bodyX1: 10,   bodyY0: 3,   bodyY1: 14,
+  bodyX0: 2,   bodyX1: 9,    bodyY0: 3,   bodyY1: 14,
   // Doorway knockout — ENCLOSED (a solid plinth survives beneath it), so the
   // front stays a mass with a hole in it rather than turning into an arch.
   // Deliberately huge: 4u x 7u out of an 8u x 11u wall. The front is mostly
   // hole. Transparent, so whatever is behind the toolbar shows through it.
-  doorX0: 4,   doorX1: 8,    doorSpring: 7,  doorFoot: 12,
-  // The kicker: the prop that gives the game away. Held at EXACTLY 45deg so it
-  // rasterises to a clean stair at 16px instead of a shallow smear, and so the
-  // triangle of daylight between it and the wall stays open and readable.
-  kickAx: 10,  kickAy: 9,    kickBx: 13.6, kickBy: 12.6, kickHalf: 1.05,
+  doorX0: 4,   doorX1: 7,    doorSpring: 8,  doorFoot: 12,
+  // The prop that gives the game away. Held at EXACTLY 45deg: a shallow
+  // diagonal can never land on whole pixels and turns to smear at 16px,
+  // whereas 45deg rasterises to a clean stair. It leaves a big open triangle
+  // of daylight between itself, the wall and the ground — that triangle is
+  // what makes the mark read "propped up" rather than "buttressed".
+  // Expressed as a 45deg band  u0 <= (y - x) <= u1  so both ends are FLAT
+  // cuts, not round caps: flush against the wall, flat foot on the ground.
+  // A round cap turned the prop into a mug handle in an earlier pass.
+  kickU0: 0,   kickU1: 2.7,
+  // Ground line — both the wall and the prop stand on it, which closes the
+  // daylight triangle and makes "leaning" unmistakable.
+  groundX0: 1, groundX1: 15, groundY0: 14, groundY1: 15,
 };
 
-const DOOR_CX = (G.doorX0 + G.doorX1) / 2;      // 6
-const DOOR_R  = (G.doorX1 - G.doorX0) / 2;      // 2
+const DOOR_CX = (G.doorX0 + G.doorX1) / 2;      // 5.5
+const DOOR_R  = (G.doorX1 - G.doorX0) / 2;      // 1.5
 
 // Solid front, before the doorway is punched out.
 function inFront(x, y) {
@@ -125,15 +133,21 @@ function distToSegment(px, py, x1, y1, x2, y2) {
 }
 
 function inKicker(x, y) {
-  if (y > G.bodyY1) return false;                           // stands on the
-  if (x < G.bodyX1) return false;                           // same ground line
-  return distToSegment(x, y, G.kickAx, G.kickAy, G.kickBx, G.kickBy) <= G.kickHalf;
+  if (x < G.bodyX1) return false;          // starts at the wall's back
+  if (y > G.bodyY1) return false;          // stops on the ground line
+  const u = y - x;                         // constant along a 45deg run
+  return u >= G.kickU0 && u <= G.kickU1;
 }
 
-// mask: 0 = nothing, 1 = the front, 2 = the kicker
+function inGround(x, y) {
+  return x >= G.groundX0 && x <= G.groundX1 && y >= G.groundY0 && y <= G.groundY1;
+}
+
+// mask: 0 = nothing, 1 = the front, 2 = the prop, 3 = the ground
 function sample(x, y) {
   if (inFront(x, y) && !inDoorway(x, y)) return 1;
   if (inKicker(x, y)) return 2;
+  if (inGround(x, y)) return 3;
   return 0;
 }
 
@@ -159,7 +173,7 @@ function lerp3(a, b, t) {
 
 function colourFor(mask, x, y, modulation) {
   if (FLAT) return [0, 0, 0];
-  if (mask === 2) return STRUT_C;
+  if (mask === 2 || mask === 3) return STRUT_C;
   // Gentle top-to-bottom shift on the flat. Scaled down at small sizes so the
   // 16px raster is effectively one flat colour.
   const t = Math.max(0, Math.min(1, (y - G.cornY0) / (G.bodyY1 - G.cornY0)));

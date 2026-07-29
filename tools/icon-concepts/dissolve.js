@@ -19,12 +19,13 @@
 //     all the irregularity lives in the detached fragments.
 //
 // COLOUR
-// One warm ember ramp: deep vermilion mass (#D6351C) heating to orange
-// (#EE6B2A) as the fragments break away — matter glowing as it comes apart.
-// Chosen because both endpoints sit in a narrow mid-luminance band (relative
-// luminance ~0.20-0.29), which is the only way a mark survives on BOTH a
-// #f1f3f4 and a #292a2d toolbar. There is no cool hue anywhere in it, so it
-// cannot collapse into the blue-to-purple default.
+// One warm ember ramp, cooling as it comes apart: a vermilion mass (#E93E12)
+// whose fragments shift to burnt orange (#D26516) the further they get from
+// the body — heat leaving matter that has stopped holding together. It is a
+// CONSTANT-LUMINANCE ramp: every stop sits within Y = .208-.231, so the whole
+// mark carries 3.4:1 or better against both a #f1f3f4 and a #292a2d toolbar
+// and the travel the eye reads is pure hue. Nothing cool appears anywhere in
+// it, so it cannot collapse into the blue-to-purple default.
 //
 // OPACITY
 // Every surviving cell is 100% opaque. Fading the tail with alpha is the
@@ -120,8 +121,15 @@ const BANDS = [
   [3]               // d4 — one last square, nearly at the far edge
 ];
 
-const C_MASS = [0xD6, 0x35, 0x1C];  // #D6351C deep vermilion
-const C_FAR = [0xEE, 0x6B, 0x2A];   // #EE6B2A hot orange
+// Both endpoints are luminance-solved, not eyeballed. Against #f1f3f4 (Y .893)
+// and #292a2d (Y .023) the worst-case contrast is maximised at Y = .2127, and
+// both stops are pinned to it. Holding luminance flat and letting only hue
+// travel is what makes the ramp behave identically on the two toolbars — a
+// brightness ramp always fails on one of them, because "nearly gone" on white
+// is invisible on charcoal and vice versa.
+//                                    light   dark
+const C_MASS = [0xE9, 0x3E, 0x12];  // #E93E12 vermilion     3.65 / 3.53
+const C_FAR = [0xD2, 0x65, 0x16];   // #D26516 burnt orange  3.36 / 3.84
 
 /* ---------------------------------------------------------------- build */
 
