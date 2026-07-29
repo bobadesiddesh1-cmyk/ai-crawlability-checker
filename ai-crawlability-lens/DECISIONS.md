@@ -398,8 +398,19 @@ clicks meant for the page.
 
 ## 9. Bot list
 
-**Decision:** Six fetched bots — Googlebot, Bingbot, GPTBot, PerplexityBot, ClaudeBot,
-and a Generic non-JS baseline. `Google-Extended` and `CCBot` are robots.txt-only.
+**Decision:** Nine fetched bots. `Google-Extended` and `CCBot` are robots.txt-only.
+
+**The rule for earning a row:** a crawler is only worth fetching if it can produce a
+*different answer* from the Generic baseline. Absent cloaking every non-JS crawler
+receives byte-identical HTML, so rendering alone never justifies a row. Two things do —
+a distinct `robots.txt` product token, and a distinct User-Agent a server may treat
+differently.
+
+That is why `OAI-SearchBot`, `ChatGPT-User` and `Perplexity-User` were added after the
+first release. **GPTBot is training-data crawling; OAI-SearchBot builds the index behind
+ChatGPT search.** Disallowing one while allowing the other is common and reasonable, and
+doing it by accident is common too. Checking only GPTBot answers the wrong question — the
+same mistake as checking only Googlebot and missing Google-Extended.
 
 **Why:** These are what the brief specified and they cover the meaningfully distinct
 behaviours: one JS-executing crawler (Googlebot), one JS-executing crawler with a

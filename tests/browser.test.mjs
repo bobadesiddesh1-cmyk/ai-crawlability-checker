@@ -219,11 +219,18 @@ is(
   true,
   'the Generic baseline carries no crawler token'
 );
-is(new Set(Object.values(uaByBot).filter(Boolean)).size, 5, 'each successful bot got a distinct User-Agent — no rule-swap race');
+// Derived from the bot list, not hard-coded: adding a crawler must not require
+// editing a magic number in a test that is supposed to be checking the swap.
+const okBots = BOTS.filter((b) => R.perBot[b.id].status === 'ok');
+is(
+  new Set(Object.values(uaByBot).filter(Boolean)).size,
+  okBots.length,
+  `each of the ${okBots.length} successful bots got a distinct User-Agent — no rule-swap race`
+);
 
 /* --- sequential, not parallel ------------------------------------------- */
 const pageReqs = seenRequests.filter((r) => r.url === '/');
-is(pageReqs.length, 6, 'exactly one page request per bot');
+is(pageReqs.length, BOTS.length, `exactly one page request per bot (${BOTS.length})`);
 const overlapping = pageReqs.some((r, i) => i > 0 && r.at < pageReqs[i - 1].at);
 is(overlapping, false, 'page requests arrived in order — fetches are sequential');
 

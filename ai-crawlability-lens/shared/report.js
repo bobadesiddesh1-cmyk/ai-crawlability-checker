@@ -203,7 +203,7 @@ export function buildReportHtml(result, framework) {
   ${renderKpis(result, bots)}
   ${renderCriticalBanner(blockedBots, blockedTokens, serverBlocked)}
   ${renderCloakingBanner(result.cloaking)}
-  ${renderDiagnosis(bots)}
+  ${renderDiagnosis(bots, result.url)}
 
   <h2>Per-bot results</h2>
   <div class="scroll">
@@ -284,6 +284,28 @@ function renderPageVerdict(v) {
   </div>`;
 }
 
+/**
+ * Every access finding rests on the server recognising a User-Agent string that
+ * this tool hard-codes. A stale string fails silently — the run still looks
+ * confident while answering the wrong question.
+ *
+ * So whenever a bot did not get a clean response, print the exact string that
+ * was sent and a one-line command to reproduce it. That turns "trust our
+ * table" into something the reader can falsify in ten seconds, which is the
+ * only real defence against a string drifting out from under us.
+ *
+ * @param {Object} b
+ * @param {string} pageUrl
+ * @returns {string}
+ */
+function renderReproduce(b, pageUrl) {
+  return `<p class="muted" style="margin-top:8px">Sent as <code>${esc(b.ua)}</code></p>
+    <pre style="margin-top:6px">curl -sI -A '${esc(b.ua)}' '${esc(pageUrl)}'</pre>
+    <p class="muted">If that returns a different status than the table shows, this string is
+    out of date — check <a href="https://platform.openai.com/docs/bots">the vendor's bot
+    documentation</a> and update <code>data/bot-user-agents.js</code>.</p>`;
+}
+
 /** Above this the strip stops being readable and starts being wallpaper. */
 const MAX_STRIP_BLOCKS = 240;
 
@@ -320,9 +342,10 @@ const GATE_GLYPH = { pass: '✓', fail: '✕', warn: '!', skip: '·' };
  * gate chain that produced the answer.
  *
  * @param {Object[]} bots
+ * @param {string} pageUrl
  * @returns {string}
  */
-function renderDiagnosis(bots) {
+function renderDiagnosis(bots, pageUrl) {
   const withVerdict = bots.filter((b) => b.verdict);
   if (!withVerdict.length) return '';
 
@@ -340,6 +363,7 @@ function renderDiagnosis(bots) {
           <p class="muted">${esc(b.verdict.because)}</p>
           ${renderBlockStrip(b)}
           ${b.verdict.fix ? `<p><strong>Fix:</strong> ${esc(b.verdict.fix)}</p>` : ''}
+          ${b.status !== 'ok' ? renderReproduce(b, pageUrl) : ''}
           <ul class="gates">
             ${b.verdict.gates
               .map(
