@@ -22,5 +22,6 @@ Load it unpacked at `chrome://extensions`. No build step, no dependencies.
 | [`tools/`](tools) | Dependency-free icon generators and the concept comparison sheet. See [`tools/README.md`](tools/README.md). |
 | [`docs/screenshots/`](docs/screenshots) | UI screenshots, captured from the real extension against a demo fixture site. |
 | [`docs/icon-sheet.html`](docs/icon-sheet.html) | Icon candidates compared at 16/32/48/128 and in mock browser toolbars. |
+| [`docs/ui-demo.html`](docs/ui-demo.html) | Self-contained interactive walkthrough of the UI. Open it in a browser; no server needed. |
 
 ![Popup results](docs/screenshots/popup-results.png)
