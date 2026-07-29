@@ -92,9 +92,31 @@ result. `cache: 'no-store'` avoids scoring a stale cached body.
 
 ## 3a. Request pacing, and why a 429 is not a block
 
-**Decision:** 400 ms between consecutive page fetches, doubling to a 4 s ceiling after any
-throttle signal. HTTP 429 gets its own `throttled` status — it is **not** in
-`BLOCKING_STATUSES` — and one retry is made, honouring `Retry-After` up to 10 s.
+**Decision:** the pace is **derived from the origin**, not guessed. 400 ms is only the
+floor when the site says nothing. HTTP 429 gets its own `throttled` status — it is **not**
+in `BLOCKING_STATUSES` — and one retry is made, honouring `Retry-After` up to 10 s.
+
+**There is no rate that is universally safe, and it is worth being clear about why.**
+Thresholds are per-site and mostly undocumented, and modern bot management does not work
+on rate at all — Cloudflare and Akamai fingerprint the TLS handshake and header ordering
+and challenge on identity, not frequency. Nine requests carrying nine different crawler
+User-Agents from one residential IP is itself an odd pattern, and no delay makes it look
+normal. So rather than pick a number and hope, the pacer reads the three places a site
+states its own limit:
+
+| Signal | Where it comes from | Why it beats a constant |
+|---|---|---|
+| `Crawl-delay` | robots.txt, per user-agent | The site literally declaring the rate it tolerates. Resolved through the *same* group selection as the Allow/Disallow rules, so a bot with its own group does not inherit the `*` delay it does not obey. |
+| `RateLimit-Remaining` / `-Reset` | response headers (also `X-RateLimit-*`) | A published budget. When little is left, the remainder of the run is spread across the window the origin says it will reset in. |
+| Response latency | measured | Scrapy's AutoThrottle heuristic: a host taking 2 s to answer is loaded and deserves more room than one answering in 40 ms. |
+
+Everything only ever raises the floor. Whichever signal asks for the most space wins.
+
+**Why `Crawl-delay` is capped at 3 s:** sites declare 10 s, 30 s, occasionally 120 s. Nine
+crawlers at 30 s is a four-minute run inside a popup that has to stay open — nobody sits
+through that, they close it and conclude the tool is broken. Above the cap the run says so
+in the UI rather than either silently ignoring the site's stated rate or silently hanging.
+A tool that reports on crawler behaviour has no business hiding that about itself.
 
 **Why the pacing:** the tool asks for the same URL once per crawler. With nine crawlers
 that is nine requests in well under a second, which is precisely the burst signature rate

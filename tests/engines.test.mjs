@@ -6,7 +6,8 @@ import {
   isPathAllowed,
   evaluateBots,
   normalizePathForMatching,
-  compilePathPattern
+  compilePathPattern,
+  crawlDelayForBot
 } from '../ai-crawlability-lens/engine/robots-parser.js';
 
 globalThis.self = globalThis;
@@ -199,6 +200,55 @@ const cBlocked = cloaking.detectCloaking(
 );
 is(cBlocked.detected, false, 'a 403 is excluded from the cloaking comparison');
 is(cBlocked.skipped.length, 1, 'the 403 bot is reported as skipped, not silently dropped');
+
+/* ------------------------------------------------------------- crawl-delay */
+console.log('\ncrawl-delay');
+
+// Not in RFC 9309, but honoured by Bing and Yandex, and it is the one place a
+// site states the request rate it will tolerate. Ignoring it meant guessing at
+// a number the origin had already published.
+const cd = parseRobotsTxt(`
+User-agent: *
+Crawl-delay: 2
+Disallow: /private/
+
+User-agent: GPTBot
+Crawl-delay: 10
+Disallow: /tmp/
+
+User-agent: ClaudeBot
+Disallow: /nope/
+`);
+
+is(crawlDelayForBot(cd, 'GPTBot'), 10, 'a bot with its own Crawl-delay gets it');
+is(crawlDelayForBot(cd, 'PerplexityBot'), 2, 'a bot with no group falls back to the * delay');
+is(crawlDelayForBot(cd, 'ClaudeBot'), null,
+   'a bot with its OWN group does NOT inherit the * delay it does not obey');
+
+// Crawl-delay must not swallow the User-agent header the way an unknown field
+// is allowed to, or the group it belongs to changes shape.
+is(cd.groups.length, 3, 'Crawl-delay does not merge or split groups');
+is(isPathAllowed(cd, 'GPTBot', '/tmp/x').allowed, false, 'and the rules around it still apply');
+
+const cdNone = parseRobotsTxt('User-agent: *\nDisallow:\n');
+is(crawlDelayForBot(cdNone, 'GPTBot'), null, 'no Crawl-delay anywhere is null, not zero');
+
+const cdJunk = parseRobotsTxt('User-agent: *\nCrawl-delay: soon\n');
+is(crawlDelayForBot(cdJunk, 'GPTBot'), null, 'an unparseable Crawl-delay is ignored, not coerced to 0');
+
+const cdNeg = parseRobotsTxt('User-agent: *\nCrawl-delay: -5\n');
+is(crawlDelayForBot(cdNeg, 'GPTBot'), null, 'a negative Crawl-delay is ignored');
+
+const cdFrac = parseRobotsTxt('User-agent: *\nCrawl-delay: 0.5\n');
+is(crawlDelayForBot(cdFrac, 'GPTBot'), 0.5, 'a fractional Crawl-delay survives');
+
+// Same token in two groups: obey the more cautious statement.
+const cdDup = parseRobotsTxt('User-agent: GPTBot\nCrawl-delay: 1\n\nUser-agent: GPTBot\nCrawl-delay: 7\n');
+is(crawlDelayForBot(cdDup, 'GPTBot'), 7, 'a token declared twice takes the larger delay');
+
+// It has to travel with the verdict, or background.js cannot reach it.
+const cdBots = evaluateBots(cd, [{ id: 'gptbot', label: 'GPTBot', robotsTokens: ['GPTBot'] }], '/x');
+is(cdBots.gptbot.crawlDelay, 10, 'evaluateBots carries the delay through to the verdict');
 
 /* ----------------------------------------------------------------- verdict */
 console.log('\nverdict engine');

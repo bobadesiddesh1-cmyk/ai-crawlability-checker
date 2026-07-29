@@ -87,6 +87,39 @@ const BASE_PACING_MS = 400;
 const MAX_PACING_MS = 4000;
 
 /**
+ * Ceiling on an honoured `Crawl-delay`.
+ *
+ * Sites declare 10s, 30s, occasionally 120s. Nine crawlers at 30s is a
+ * four-minute run in a popup that must stay open, which nobody will sit
+ * through — they will close it and conclude the tool is broken. Past this we
+ * use the cap and say so in the result, rather than either silently ignoring
+ * the site's stated rate or silently hanging.
+ */
+const MAX_CRAWL_DELAY_MS = 3000;
+
+/**
+ * Pace at least as slowly as the origin is answering.
+ *
+ * Scrapy's AutoThrottle heuristic: response latency is the best free proxy for
+ * how loaded a server is, and a host taking 2s to answer deserves more room
+ * than one answering in 40ms. Capped, because one slow response should not
+ * dictate the whole run.
+ */
+const MAX_LATENCY_PACING_MS = 1500;
+
+/**
+ * Why the run is pausing, said plainly. A progress bar that stalls without
+ * explanation reads as a hang; "your robots.txt asks for this" does not.
+ */
+const PACING_LABEL = {
+  default: 'Pausing',
+  robots: 'Waiting — robots.txt asks for',
+  latency: 'Waiting — the server is answering slowly, pausing',
+  headers: 'Waiting — the server published a request budget, pausing',
+  '429': 'Waiting — the server is rate-limiting, backing off'
+};
+
+/**
  * Ceiling for an honoured `Retry-After`. Some CDNs answer with minutes, which
  * is not a wait a popup can survive — past this we stop and say so instead of
  * pretending to still be working.
@@ -164,10 +197,19 @@ async function runFetchPipeline(pageUrl) {
   const robots = await checkRobots(origin, url);
   const perBot = {};
 
+  // The site's own declared rate, where it has one. Crawl-delay is a
+  // per-crawler statement, so the floor for a run covering all of them is the
+  // largest any of them was given.
+  const declaredDelays = BOTS
+    .map((b) => (robots.botVerdicts[b.id] || {}).crawlDelay)
+    .filter((d) => typeof d === 'number' && d > 0);
+  const declaredMs = declaredDelays.length ? Math.max(...declaredDelays) * 1000 : 0;
+  const declaredCapped = declaredMs > MAX_CRAWL_DELAY_MS;
+
   // One pacer for the whole run: what one bot learns about this origin's rate
   // limiting has to slow down the bots that follow, or the run keeps walking
   // into the same wall.
-  const pacer = createPacer();
+  const pacer = createPacer(Math.min(declaredMs, MAX_CRAWL_DELAY_MS));
 
   // Strictly one bot at a time. See the header comment.
   let done = 1;
@@ -175,8 +217,8 @@ async function runFetchPipeline(pageUrl) {
     // No pause before the first: nothing has been requested yet except
     // robots.txt, which is a different, cheap, usually-cached file.
     if (index > 0) {
-      await pacer.pause((ms) =>
-        emitProgress('fetch', `Pausing ${Math.round(ms / 100) / 10}s to avoid rate limits…`, done, BOTS.length + 1)
+      await pacer.pause((ms, why) =>
+        emitProgress('fetch', `${PACING_LABEL[why] || PACING_LABEL.default} ${Math.round(ms / 100) / 10}s…`, done, BOTS.length + 1)
       );
     }
     emitProgress('fetch', `Fetching as ${bot.label}…`, done, BOTS.length + 1);
@@ -201,7 +243,12 @@ async function runFetchPipeline(pageUrl) {
       any: throttled.length > 0,
       count: throttled.length,
       botIds: throttled.map((b) => b.botId),
-      finalPacingMs: pacer.current()
+      finalPacingMs: pacer.current(),
+      pacingReason: pacer.reason(),
+      // What robots.txt asked for, and whether we could honour it in full. A
+      // capped delay is stated rather than quietly applied.
+      declaredCrawlDelayMs: declaredMs || null,
+      crawlDelayCapped: declaredCapped
     },
     baselineBotId: BASELINE_BOT_ID,
     bots: BOTS.map((b) => ({
@@ -334,11 +381,17 @@ async function fetchAsBot(bot, pageUrl, origin, pacer, done) {
     while (attempts < MAX_ATTEMPTS) {
       attempts += 1;
 
+      const sentAt = Date.now();
       const res = await timedFetch(pageUrl, {
         credentials: 'omit', // fetch as a logged-out crawler; a session cookie
         cache: 'no-store', // would show content no bot could ever see
         redirect: 'follow'
       });
+
+      // Both signals are free and both come from the origin rather than from a
+      // constant chosen in advance. Read them before deciding anything.
+      pacer.observeLatency(Date.now() - sentAt);
+      pacer.observeHeaders(res.headers);
 
       httpStatus = res.status;
       finalUrl = res.url || pageUrl;
@@ -547,17 +600,69 @@ function parseRetryAfter(value) {
  * @returns {{pause: (onWait?: (ms: number) => void) => Promise<void>,
  *            backOff: () => void, current: () => number}}
  */
-function createPacer() {
-  let delay = BASE_PACING_MS;
+function createPacer(floorMs = 0) {
+  const floor = Math.max(BASE_PACING_MS, floorMs);
+  let delay = floor;
+  /** @type {'default'|'robots'|'latency'|'headers'|'429'} */
+  let reason = floorMs > BASE_PACING_MS ? 'robots' : 'default';
+
+  /** Raise the floor; never lower it. */
+  function raise(to, why) {
+    const next = Math.min(Math.max(to, floor), MAX_PACING_MS);
+    if (next > delay) {
+      delay = next;
+      reason = why;
+    }
+  }
 
   return {
     current: () => delay,
+    reason: () => reason,
+
     backOff: () => {
-      delay = Math.min(delay * 2, MAX_PACING_MS);
+      delay = Math.min(Math.max(delay * 2, floor), MAX_PACING_MS);
+      reason = '429';
     },
+
+    /** A slow origin is a loaded origin. */
+    observeLatency: (ms) => {
+      if (Number.isFinite(ms) && ms > 0) raise(Math.min(ms, MAX_LATENCY_PACING_MS), 'latency');
+    },
+
+    /**
+     * Honour an advertised request budget when the origin publishes one.
+     *
+     * The IETF draft spells it `RateLimit-*`; most CDNs shipped `X-RateLimit-*`
+     * first and kept it. When the remaining budget is nearly spent, spread the
+     * rest of the run across the window the origin says it will reset in.
+     */
+    observeHeaders: (headers) => {
+      const num = (name) => {
+        const raw = headers.get(name);
+        if (raw === null) return null;
+        const n = Number(String(raw).trim());
+        return Number.isFinite(n) ? n : null;
+      };
+
+      const remaining = num('ratelimit-remaining') ?? num('x-ratelimit-remaining');
+      const reset = num('ratelimit-reset') ?? num('x-ratelimit-reset');
+
+      if (remaining === null) return;
+      if (remaining > BOTS.length) return; // Budget is not a constraint here.
+
+      // Spread what is left over the reset window. `reset` is seconds in both
+      // spellings; an absolute epoch would be far larger than any real window,
+      // so treat implausible values as absent rather than sleeping for a day.
+      if (reset !== null && reset > 0 && reset < 3600) {
+        raise((reset * 1000) / Math.max(remaining, 1), 'headers');
+      } else if (remaining <= 1) {
+        raise(MAX_PACING_MS, 'headers');
+      }
+    },
+
     async pause(onWait) {
       // Only announce a wait the user would otherwise experience as a freeze.
-      if (onWait && delay > BASE_PACING_MS) onWait(delay);
+      if (onWait && delay > BASE_PACING_MS) onWait(delay, reason);
       await sleep(delay);
     }
   };
