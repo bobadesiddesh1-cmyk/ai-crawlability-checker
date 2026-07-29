@@ -1,0 +1,273 @@
+<title>AI Crawlability Lens — icon concepts</title>
+<style>
+  :root {
+    --bg:#f2f4f7; --surface:#fff; --surface-2:#f7f8fa; --ink:#10131a; --muted:#5b6472;
+    --line:#dee2e9; --accent:#4f46e5;
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0a0c10; --surface:#12151c; --surface-2:#171b23; --ink:#e7eaf0;
+            --muted:#8c96a6; --line:#242b36; --accent:#8b85ff; }
+  }
+  :root[data-theme="light"] { --bg:#f2f4f7; --surface:#fff; --surface-2:#f7f8fa; --ink:#10131a;
+                              --muted:#5b6472; --line:#dee2e9; --accent:#4f46e5; }
+  :root[data-theme="dark"] { --bg:#0a0c10; --surface:#12151c; --surface-2:#171b23; --ink:#e7eaf0;
+                             --muted:#8c96a6; --line:#242b36; --accent:#8b85ff; }
+
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans);
+         font-size:15px; line-height:1.6; -webkit-font-smoothing:antialiased; }
+  .shell { max-width:1180px; margin:0 auto; padding:34px 22px 72px; }
+
+  .eyebrow { font-family:var(--mono); font-size:11.5px; letter-spacing:.14em;
+             text-transform:uppercase; color:var(--accent); margin:0 0 12px; }
+  h1 { font-size:clamp(26px,3.6vw,38px); line-height:1.12; letter-spacing:-.028em;
+       font-weight:680; margin:0 0 14px; text-wrap:balance; max-width:22ch; }
+  .lede { font-size:16.5px; color:var(--muted); max-width:64ch; margin:0 0 8px; }
+  .lede strong { color:var(--ink); font-weight:620; }
+  header.page-head { padding-bottom:26px; margin-bottom:30px; border-bottom:1px solid var(--line); }
+
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); gap:20px; }
+
+  .concept { background:var(--surface); border:1px solid var(--line); border-radius:12px;
+             padding:18px 20px 20px; }
+  .concept-head h2 { font-size:16px; letter-spacing:-.015em; margin:0 0 16px;
+                     display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+  .tag { font-family:var(--mono); font-size:9.5px; letter-spacing:.07em; text-transform:uppercase;
+         font-weight:600; color:var(--muted); border:1px solid var(--line);
+         border-radius:999px; padding:2px 8px; }
+
+  .showcase { display:flex; gap:22px; align-items:flex-end; flex-wrap:wrap; }
+  .hero-fig { margin:0; text-align:center; flex:none; }
+  .hero { border-radius:14px; display:block; image-rendering:auto; }
+  .hero-fig figcaption { font-family:var(--mono); font-size:9.5px; color:var(--muted);
+                         letter-spacing:.06em; margin-top:5px; }
+  .sizes { display:flex; gap:14px; align-items:flex-end; flex-wrap:wrap; }
+  .sizes figure { margin:0; text-align:center; }
+  .sizes .cell { height:52px; display:grid; place-items:center; }
+  .sizes img { image-rendering:auto; }
+  .sizes figcaption { font-family:var(--mono); font-size:9.5px; color:var(--muted);
+                      letter-spacing:.06em; margin-top:5px; }
+
+  .toolbars { display:flex; flex-direction:column; gap:7px; margin-top:18px; }
+  .toolbar { display:flex; align-items:center; gap:9px; padding:6px 9px; border-radius:8px;
+             border:1px solid var(--line); font-size:11px; }
+  .toolbar.light { background:#f1f3f4; color:#5f6368; border-color:#dadce0; }
+  .toolbar.dark  { background:#292a2d; color:#9aa0a6; border-color:#3c4043; }
+  .tb-dots { display:flex; gap:3px; }
+  .tb-dots i { width:6px; height:6px; border-radius:50%; background:currentColor;
+               opacity:.45; display:block; }
+  .tb-omni { flex:1; min-width:0; font-family:var(--mono); font-size:10px;
+             background:rgba(128,128,128,.16); border-radius:999px; padding:2px 9px;
+             white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .tb-label { font-family:var(--mono); font-size:9px; letter-spacing:.08em;
+              text-transform:uppercase; opacity:.7; }
+
+  .note { margin-top:16px; padding-top:14px; border-top:1px solid var(--line);
+          font-size:13.5px; color:var(--muted); }
+  .note b { color:var(--ink); font-weight:620; }
+  .note p { margin:0 0 8px; }
+  .note p:last-child { margin-bottom:0; }
+
+  footer.page-foot { margin-top:38px; padding-top:18px; border-top:1px solid var(--line);
+                     color:var(--muted); font-size:12.5px; }
+  footer.page-foot b { color:var(--ink); }
+  footer code { font-family:var(--mono); font-size:.92em; }
+</style>
+
+<div class="shell">
+  <header class="page-head">
+    <p class="eyebrow">AI Crawlability Lens · icon concepts</p>
+    <h1>Round two: no tile, no gradient, no stock glyph</h1>
+    <p class="lede">
+      The first round came back as one icon with four different stickers — a rounded square,
+      a blue-to-purple gradient, a stock glyph in the middle. So this round bans the container,
+      the gradient, and the four glyphs that caused it. Every mark below is full-bleed and
+      single-ink.
+    </p>
+    <p class="lede">
+      Each is a real generated PNG set, not a sketch. <strong>Judge them in the toolbar
+      strips</strong>, not by the 128px hero: a Chrome action icon lives at 16px, and that is
+      where icon ideas quietly fall apart.
+    </p>
+  </header>
+
+  <div class="grid">
+
+    <article class="concept" id="unquotable">
+      <header class="concept-head">
+        <h2>Unquotable</h2>
+      </header>
+
+      <div class="showcase">
+        <figure class="hero-fig">
+          <img class="hero" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAACcklEQVR42u3dsVFDQRBEQYVAHFjkIYfMCGUzEiEQAgRB6d/Mqo214c91PY/i9ri/39zrnhEAMAIADgAHgAPAAeBeDsDv8vvvSKv3AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAjvz8p/5+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIA/DAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAOwDPv4/AHTvg/bjy+z7M/8Ovgx/087u9v4QCO7/PsD/w++IGfBf+69fg+W/M2BY8fsc/GvDWkP2afjXlrSH/MPtvyNiWPH7PPpry1pD9qn015a0l/1D5b8jZFjx+1z4a8NaU/bp8NeWtKf9w+7XmbsseP26c5b23pj9ynOW9t6Y/cpzVvU/j4kfs05q0x/bH7NOatMf2x+7TlbUofP3afpry1pj96n6a8taY/ep+WvE3x40fv05C35vTH79OQt+b0x++Tnrcpf/z4fZLz1p7+in2S89ae/op9UvM2Cx6/Yp/EvG1If80+iXnbkP6afdLyNksev2afpLxtSX/VPkl525L+qn1S8jaLHr9qn4S8bUp/3T4JeduU/rp9Tudtlj1+3T4n87Yt/ZX7nMzbtvRX7nMqb7Pw8Sv3OZG3jemv3edE3jamv3afq/M2Sx+/dp8r87Y1/dX7XJm3remv3ueqvM3ix6/e54q8bU5//T5X5G1z+uv3uS1/HAeAA8AB4ABwADgAHAAOAAeAA8ABAIARAHAAOADcK94f6qvrbqGfd2IAAAAASUVORK5CYII=" alt="Unquotable at 128 pixels" width="128" height="128">
+          <figcaption>128px</figcaption>
+        </figure>
+        <div class="sizes">
+          <figure>
+              <div class="cell"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAZElEQVR42mO4563FQAkGEf/xYJhCnGrobgADutjQM4A2gQjDBmiS67HEO4YaZMl+JIn397y1BLAYgKEGWfI+kmQAjpSHoQab09bj0IxVDbrTcDkdpxp0pwXgyThY1TBQIzdShAH/PdARZ1AuwgAAAABJRU5ErkJggg==" alt="Unquotable at 16 pixels" width="16" height="16"></div>
+              <figcaption>16px</figcaption>
+            </figure><figure>
+              <div class="cell"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAApElEQVR42u2Xuw2AMAxEMwJzULFHGm/GKN4ojMAI0CNi37nhExcu/Xx6ihKntDqXJ6u8IcARrCssxMkAvw7QO3gZIAOMEyDvge8EuKvFaVTwuXU5vcbVaNpbnScwgMvpNW5GoxALh8thtSkxHOIw2hj1MIfRJuS+B3FQbUoOhzmINlY9xUG0SWDdhjmeNg0MpziWtoh6mmNpk+Bvh+KU/BsOH+AE3OI/crVkPzkAAAAASUVORK5CYII=" alt="Unquotable at 32 pixels" width="32" height="32"></div>
+              <figcaption>32px</figcaption>
+            </figure><figure>
+              <div class="cell"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAA4klEQVR42u2ZwQ2DQAwEr4TUwYs++LizlOKOSAkpgVQQ5ewdFJD24a/Ho7VA8o19W8ada1jgAgLHCfUNiLMsYAELWAARmPlkWsACFrCABSzgP7EFLGCBCwr8qrXYNIUrQ5k10/RZaPjet+UhCJRZM01fhaYh3nnKLDLSFIdvsahI1dVps6hIAzgTtlhEpAkM32apkRKrI7HUSAO6MrdZSqQJDS+xupFSqyOzupEG+EghsTqRJji8zKpGSq4OwqpGGvAbl8yqRJrw8AhrNlJ6dTDWbKRxwhMpwvJDtwUsYIH/1gdSk04GdKEc2gAAAABJRU5ErkJggg==" alt="Unquotable at 48 pixels" width="48" height="48"></div>
+              <figcaption>48px</figcaption>
+            </figure>
+        </div>
+      </div>
+
+      <div class="toolbars">
+        <div class="toolbar light">
+          <span class="tb-dots"><i></i><i></i><i></i></span>
+          <span class="tb-omni">northwind.example/blog</span>
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAZElEQVR42mO4563FQAkGEf/xYJhCnGrobgADutjQM4A2gQjDBmiS67HEO4YaZMl+JIn397y1BLAYgKEGWfI+kmQAjpSHoQab09bj0IxVDbrTcDkdpxp0pwXgyThY1TBQIzdShAH/PdARZ1AuwgAAAABJRU5ErkJggg==" alt="" width="16" height="16">
+          <span class="tb-label">light</span>
+        </div>
+        <div class="toolbar dark">
+          <span class="tb-dots"><i></i><i></i><i></i></span>
+          <span class="tb-omni">northwind.example/blog</span>
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAZElEQVR42mO4563FQAkGEf/xYJhCnGrobgADutjQM4A2gQjDBmiS67HEO4YaZMl+JIn397y1BLAYgKEGWfI+kmQAjpSHoQab09bj0IxVDbrTcDkdpxp0pwXgyThY1TBQIzdShAH/PdARZ1AuwgAAAABJRU5ErkJggg==" alt="" width="16" height="16">
+          <span class="tb-label">dark</span>
+        </div>
+      </div>
+
+      <div class="note"><p><b>The citation that never happens.</b> A geometric closing double-quote, full-bleed, edge to edge: two blades, each a solid square head with a sheared tail dropping from its bottom-right corner. The first is solid. The second is the identical blade with a window punched through its head — a quotation whose second half never closes.</p><p>This is the only concept aimed at the <em>outcome</em> rather than the mechanism. The user's real stake is not “is my HTML server-rendered”, it is “can an AI answer quote me”. A quote is a pair; a pair missing half is a citation that will not happen.</p><p>One flat editor's-mark vermillion <code>#DE4B2A</code>. Its luminance (~0.21) sits between both toolbar greys, so a single ink measures <b>3.67:1</b> on light and <b>3.52:1</b> on dark — verified across all 111 opaque pixels of the 16px file.</p><p><b>16px:</b> it still reads as a quotation mark. Heads and window land on whole pixels — 7×7 blocks, a 3px void, 2px walls — and only the two diagonal tails antialias, each keeping a 2–3px solid core.</p><p><b>Honest caveat:</b> in isolation the hollow blade resembles a <b>9</b>. The adjacent solid twin is what fixes the read, so the pairing is load-bearing — this mark cannot be used as a single blade.</p><p><b>Rejected:</b> a pennant blade (read as a bookmark); guillemets (read as <code>&lt;&gt;</code>); a faded second mark (fails the silhouette test); an amputated tail (broke the pair); teal as a second ink (could not clear 3:1 on both toolbars).</p></div>
+    </article>
+
+    <article class="concept" id="dissolve">
+      <header class="concept-head">
+        <h2>Dissolve</h2>
+      </header>
+
+      <div class="showcase">
+        <figure class="hero-fig">
+          <img class="hero" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAABl0lEQVR42u3dsQ2EQAwEwKsBDsoh/piUmIaJiEiIvgrTApKR/oFZaSvwhJZdvkMTb25JZhtrZFp+HQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB44AD3TxuZlrsHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACyEXJ516iJTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADg/wBks8x9ZAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADkQ4EAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAbwC0jTUyBQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAnrcQ4mEEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHgYYSEEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAEzkAOlVzz7eyGicAAAAASUVORK5CYII=" alt="Dissolve at 128 pixels" width="128" height="128">
+          <figcaption>128px</figcaption>
+        </figure>
+        <div class="sizes">
+          <figure>
+              <div class="cell"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAUElEQVR42mN4aSf0Hx9mgIJ7QSL/QZgBHdDMAJj8Yw/h/yDMgAvQzAB0g2DgRrTofxAeOANg4FKq2H8Qpp0Bgy8WBk9KJDoaKTaAUDRSzQAAbkxJzNPif0IAAAAASUVORK5CYII=" alt="Dissolve at 16 pixels" width="16" height="16"></div>
+              <figcaption>16px</figcaption>
+            </figure><figure>
+              <div class="cell"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAaklEQVR42mN4aSf0nxLMgAbuBYn8R8YMhMCoA4acA9D1P/YQ/o+MGUgFow4Ycg4g5CB0cCNa9D8yHnXAyHMAOriUKvYfGY86YOg5YLQkHHXAaIto1AGkJkKqV0ajDhhwB1BaGY06YNA5AACgYic8bDv1lgAAAABJRU5ErkJggg==" alt="Dissolve at 32 pixels" width="32" height="32"></div>
+              <figcaption>32px</figcaption>
+            </figure><figure>
+              <div class="cell"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAhElEQVR42u3YsQ3CMBQEUM+QEMZJnZqWmoVTUdFQZYrPAt9IoBgweidd79dYPpdtHqJlSyW30yGyllcDAAAA8PSg92WMrGWvAAAAALwFq+V6niIrAAAAwGcAtayXY2QFAAAA8BoFAADocZH5mQMAAPjNa/RrkxIAAKBzQOtJCQAA8KeAB/n0mEJkAI0LAAAAAElFTkSuQmCC" alt="Dissolve at 48 pixels" width="48" height="48"></div>
+              <figcaption>48px</figcaption>
+            </figure>
+        </div>
+      </div>
+
+      <div class="toolbars">
+        <div class="toolbar light">
+          <span class="tb-dots"><i></i><i></i><i></i></span>
+          <span class="tb-omni">northwind.example/blog</span>
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAUElEQVR42mN4aSf0Hx9mgIJ7QSL/QZgBHdDMAJj8Yw/h/yDMgAvQzAB0g2DgRrTofxAeOANg4FKq2H8Qpp0Bgy8WBk9KJDoaKTaAUDRSzQAAbkxJzNPif0IAAAAASUVORK5CYII=" alt="" width="16" height="16">
+          <span class="tb-label">light</span>
+        </div>
+        <div class="toolbar dark">
+          <span class="tb-dots"><i></i><i></i><i></i></span>
+          <span class="tb-omni">northwind.example/blog</span>
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAUElEQVR42mN4aSf0Hx9mgIJ7QSL/QZgBHdDMAJj8Yw/h/yDMgAvQzAB0g2DgRrTofxAeOANg4FKq2H8Qpp0Bgy8WBk9KJDoaKTaAUDRSzQAAbkxJzNPif0IAAAAASUVORK5CYII=" alt="" width="16" height="16">
+          <span class="tb-label">dark</span>
+        </div>
+      </div>
+
+      <div class="note"><p><b>Matter that stopped holding together.</b> A solid vermilion mass fills the left third of the frame, full-bleed on three sides, and its right edge comes apart into thirteen discrete 2×2 squares that thin monotonically — 5, 3, 2, 2, 1 — and stop before reaching the far edge. Coherent matter, serrated edge, scatter, void.</p><p>The surviving fraction is literally a third of the frame, which is roughly what a client-rendered page actually delivers to a crawler. Squares rather than organic specks because the decay is <em>raster</em> decay — pixels dying, not smoke.</p><p>The colour travels from vermilion <code>#E93E12</code> to burnt orange <code>#D26516</code>, but every stop is pinned near relative luminance <b>Y=0.213</b> — the point that maximises worst-case contrast against both toolbars. So the hue moves and the contrast does not: <b>3.36–3.65:1</b> light, <b>3.53–3.84:1</b> dark.</p><p><b>16px:</b> 148 opaque pixels, <em>zero</em> partial alpha — grid alignment means no antialiasing at all. The mass and the serrated edge read perfectly.</p><p><b>Honest caveat:</b> below 32px the hue ramp is invisible, and the three farthest squares read as specks rather than as individual pixels.</p><p><b>Rejected:</b> an ordered Bayer dither (checkerboards at 50% coverage — texture, not decay); notching the mass edge (read unmistakably as a capital <b>E</b>); alpha-fading the tail, and a brightness ramp (anything reading “nearly gone” on white is invisible on charcoal).</p></div>
+    </article>
+
+    <article class="concept" id="redacted">
+      <header class="concept-head">
+        <h2>Redacted</h2>
+      </header>
+
+      <div class="showcase">
+        <figure class="hero-fig">
+          <img class="hero" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAABF0lEQVR42u3dsQkAIRBFwe3IGuy/EQNzw7UJhUXnwa/AiUTuIiRJkiRJ0jeN3tLeHQAAAAAAAAAAAAAAAAAAAAAAAHBuuebVAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABoABYAAYAAaAAQAAAABIkiRJkiSFiyAXMQ4JAAcFgAFgABgABoABYAAYAAaAAWAAGAAGgAFgABgABoABYAAYAAaAAWAAGAAGgAFgABgABoD5Tp8kSZIkSSqVixYAAAAAAAAAAAAAAAAAAAAAAADA/DnUADAADAADwAAwAAwAA8AAMAAMAAPAADAADAAPQjwIAQAAAAAAAAAAAAAAAAAAAECSJEmSJKlMGxw1u5rwVQ5DAAAAAElFTkSuQmCC" alt="Redacted at 128 pixels" width="128" height="128">
+          <figcaption>128px</figcaption>
+        </figure>
+        <div class="sizes">
+          <figure>
+              <div class="cell"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMElEQVR42mNgoBS8cNT/Ty4myYD/39/A8cAYgNMLdA3E4WoAzQJx8CVlkg1goBcAAFtMXupVTZLeAAAAAElFTkSuQmCC" alt="Redacted at 16 pixels" width="16" height="16"></div>
+              <figcaption>16px</figcaption>
+            </figure><figure>
+              <div class="cell"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAQklEQVR42mNgGPHghaP+/4HAw9cB/7+/wYpHHTByHDD0csEoGPAgHnXAqANGHTBa0g25knDUAaOt4lEHDL9cMOIBAIyBe7SNAgajAAAAAElFTkSuQmCC" alt="Redacted at 32 pixels" width="32" height="32"></div>
+              <figcaption>32px</figcaption>
+            </figure><figure>
+              <div class="cell"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAWklEQVR42u3YsQ0AIAgAQTdiBvdfxMLeEkewsELvEwa4BomtSXeNHlltAAB6ZK55HAAAAABrFOAIkB44pwEAAAAAAAAAnMf6/JwGAPCtAgAAUBrgHfgWIN21AfulVl/XC+4rAAAAAElFTkSuQmCC" alt="Redacted at 48 pixels" width="48" height="48"></div>
+              <figcaption>48px</figcaption>
+            </figure>
+        </div>
+      </div>
+
+      <div class="toolbars">
+        <div class="toolbar light">
+          <span class="tb-dots"><i></i><i></i><i></i></span>
+          <span class="tb-omni">northwind.example/blog</span>
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMElEQVR42mNgoBS8cNT/Ty4myYD/39/A8cAYgNMLdA3E4WoAzQJx8CVlkg1goBcAAFtMXupVTZLeAAAAAElFTkSuQmCC" alt="" width="16" height="16">
+          <span class="tb-label">light</span>
+        </div>
+        <div class="toolbar dark">
+          <span class="tb-dots"><i></i><i></i><i></i></span>
+          <span class="tb-omni">northwind.example/blog</span>
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMElEQVR42mNgoBS8cNT/Ty4myYD/39/A8cAYgNMLdA3E4WoAzQJx8CVlkg1goBcAAFtMXupVTZLeAAAAAElFTkSuQmCC" alt="" width="16" height="16">
+          <span class="tb-label">dark</span>
+        </div>
+      </div>
+
+      <div class="note"><p><b>Your content exists; the machine is not allowed to have it.</b> Three brutally heavy struck-out bars run off the left edge in a descending rag — blacked-out lines of text — and from the last one a thin tail escapes past the ink to the full measure of the first line: the one sliver the crawler still gets. A small paper chip is punched through the top bar, one fragment that was not covered properly.</p><p>No tile, no plate, no gradient. The bars bleed off the left edge so the mark is a <em>crop</em> of a larger struck-out mass rather than an object sitting on a background. The redaction is the mark, not an annotation on a drawn document.</p><p><b>Colour was decided by measurement, not taste.</b> Redaction wants to be black, and black is unusable: on Chrome's dark toolbar <code>#292a2d</code> a near-black bar measures ~1.3:1 and the icon simply is not there. The luminance band that clears 3:1 against <em>both</em> <code>#f1f3f4</code> and <code>#292a2d</code> is narrow — relative luminance 0.17–0.28 — and only one convincing redaction colour lives inside it: the red of a classified stamp. <code>#E8412F</code> measures <b>3.61:1</b> light and <b>3.57:1</b> dark, deliberately balanced rather than optimised for either. That band is too narrow to hold a second ink, so the mark is one colour.</p><p>The paper chip <code>#FFF7EC</code> would disappear on a light toolbar if it ever touched it, so it never does — it is inset with a full grid unit of ink on all four sides. Its contrast is against the ink (<b>3.78:1</b>), which is identical in both themes.</p><p><b>16px:</b> the 16px file contains <em>zero</em> partially-covered pixels — two opaque colours, every edge on a whole pixel. The rag, the escaping tail and the chip all survive. What is lost is nuance: at 16px the chip is 3×2px and reads as a notch rather than as a fragment of a word.</p><p><b>Honest caveat:</b> heavy left-aligned bars of descending length sit near the align-left / list glyph. The weight is what separates them — these are 4/16 of the canvas thick, where a text glyph is nearer 1.5/16 — but the redaction reading is helped by knowing the product.</p><p><b>Rejected:</b> two equal full-bleed bars (read as a flag, no ragged rhythm); near-black ink (dies on the dark toolbar — the whole reason for the red); amber or paper for the surviving fragment (1.4:1 and 1.05:1 on a light toolbar, so the punchline vanished exactly where it mattered); a full-height slot cut through a bar (reads as a gap on light and a glow on dark — two different marks); a second red for tonal depth (nothing else fits the 0.17–0.28 band).</p></div>
+    </article>
+
+    <article class="concept" id="wildcard">
+      <header class="concept-head">
+        <h2>Wildcard</h2>
+      </header>
+
+      <div class="showcase">
+        <figure class="hero-fig">
+          <img class="hero" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAEG0lEQVR42u2YaU5TYRiFu4SuQZmnMk+/ugAnFAUVShlEcQo7YQndhiAozkBRGRSnH13KMdc0Bgg3Ud/vM7nnPSd5/hha39w+NE/I5TRN0zRN0zRN0zRN0zRN0zRN0zRN0zRNc7cfj0ch0qEX4PvjUYh0+AV4NAKRjgSQANz79nAEIh0JIAHYBRiGSIdegK8PhiHSkQDO2ZruSshLAN8CLNMK8OX+EEQ6dQFqEsC3AAlFSgGO7g9BpHNMgAqnAEtDEOkcE4AzBo+WBiHSOSUAXwx+XhqESOeUALwxmCrIvUEwc+oD/hOKEsC3ABVXAny6OwBm/kEA7r8MSoA/YlkC+BbATwweLg6AmX8UwE8MHi72gxmDAD5i8GCxH8wYBPARgwd3+sGMUYBlCeBbAP4Y3L/TB2aMAvDH4P5CH5gJIEBFAvgWgDsG9xb6wEwgAXhjcG++F8wEEqAmAXwLwBuDH+d7wUxAAThj8ONcL5gJKABnDH6Y6wEzgQXgi8EPsz1gJrAANQngWwC+GHw/2wNmIgjAFYPvy91gJoIAXDEoAZzH4G65G8xEEoAnBndnusFMJAF4YnB3pgBmIgrAEYPVmQKYiSgARwxWSwVEpFYtFVaqpUKxWirkj/2f+fq/rdR/JtoNkQXIfgzulAqIQPKhlv9CwnLymhi3RBagRiBAFwJT2Sn9/Vdj8pr6a4Pek3xIkSXIdgzuTHchIJUA91RC3pR8TUcWINsxuD3dhUBUAt5UCXVXEmqRBch2DAZ60LXtgA8hea/6e5pvS94v+S1VDKY97KlOBKAc4a5yiNvqAhQVgynbmuqEkVrE22rW+36/l2Iw5SHf7oSRlYi3rVjvOyaAYjCSAMWItxUDCqAYPGvvbnfASD7ibXnrfSeEUgye8ZBvdcBClu5TDJ6xt7c6YCFr9ykGJYBi8MQDvtkOC1m7TzF4am9utsNCFu9TDEoAxeDvBzzZDgtZvU8xWN/ryTZYyOp9ikEJoBj89YAn2mAhy/cpBnO53KuJNljI8n2KweQB32iFhazf5z4GX95ohYWs3+c+BiWA8xh8eb0VFhjucx2DL663wALDfa5jUAI4j8EX4y2wwHKf2xjcHG+BBZb73Mbg5ngzLDDd5zIGN681wwLTfS5j8Pm1Zlhgu89dDEoA5zH47GoTLLDd5y4GJYDzGJQAzmNwY6wJFljvcxODG2ONsMB6n5sY3LjSCAus97mJwfUrjbDAfJ+LGJQAzmNw/XIDLLDfRx+DTy83wAL7ffQxKAGcx+DapQZY8HAfdQyuXToPCx7uo45BCeA8BlcvnocFL/fRxqAEcB6DqxfPwYKn+yhj8MmFc7Dg6b5MxuB/+NoSEZEAEkACSAAJIAEkgASQABJAAkgACSABNE3TNE3TNE3TNE1zuZ9lVJepzruSpgAAAABJRU5ErkJggg==" alt="Wildcard at 128 pixels" width="128" height="128">
+          <figcaption>128px</figcaption>
+        </figure>
+        <div class="sizes">
+          <figure>
+              <div class="cell"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAtklEQVR42s2TsQ3CMBBFUzAGRXqSC+zBAhAcYBM6BmIHYghhAUrGoPjoSxfJhc8RiIJIT5a/lOfzl5xlf/Hd9wuMkRT0uznG8E6WX0u8E3JKCm7bChYqeHknU1PQNRUsVEAOpuDaCJRH18iR65Dp6Vyf3skkLnACJdd9PmS8fzBFvMzLpgSJZfwpEMTL9HUJEss4to5vl9nWBYiVscBkme26ALEynpos87yagaQys8wg/IifPMQ30XYVUF55W2UAAAAASUVORK5CYII=" alt="Wildcard at 16 pixels" width="16" height="16"></div>
+              <figcaption>16px</figcaption>
+            </figure><figure>
+              <div class="cell"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABLklEQVR42u2SO07DQBRFswAXbCO/cT4UbARCIGMCgY7CO2IvgZAhJhBgMRQUF43k4mlkF3OfkUBkpNNYR/L1+LRa+7M/5Xm/OUQT/N0Bb9djNIGz5pYasFuM0QTOmg9VC7vFCAzOGskRPeD1agSGYMAdPeDlcgiGYMCns+aAGrCdD8EQDOBj3M4HYKgYwMX4fDEAQ8UALsYiS8FQMyA+xk2WIuCryNK8yNKkJPfPQq8MTx/jxhoE5BVOHnr+a2tuIS7Gp5lBQFLhJKHn/3fNgLgY3awPSYznX6aOcX3ehyTG89etjnF91oMkxvPBqWN8nPYgifXUMa6mXUhiPXWMq9MuJIynivFh0oGE8VQx3k86kDCeKsblSRsS1qNjXB63IWG96Bhr5B/j9w34t+cblgcxMxH5IxYAAAAASUVORK5CYII=" alt="Wildcard at 32 pixels" width="32" height="32"></div>
+              <figcaption>32px</figcaption>
+            </figure><figure>
+              <div class="cell"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABxklEQVR42u2UWU7CYBRGWQJLIIqKiK0DIroHsc5jwXnWNbATl+CzI85WcZ6HB5bAEj7TyIMmt7SGe//w0JuckBA+0pNwCAT8888//6rmvja6oQoRgc/1LqhCROBjLQlViAi8ryahCsvUsuwCbyudUIVlagV2gdflBFRhmZqNIfaP9LKUADelh/7NlpjA82IHuCEEbEIiAk8LcXDjIJAVEXicj4MbB4GCiMDDXDu4cRCQifl+tg3clBHgj/lupg3clBHgj/l2uhXcuAjwxnwz1QJuXAR4Y77OtIAbFwHemPMZHS4U8xl9M5/Rs6XXotvGgwBfzFdpDWXYvErrwb+f14M/7zvv7J+JBwmemC9NDQ7kXHY5p60dqgcBnpityWY4YLjsDMetqYU8CPDEfDERA0WlW/t3riTm8/EYKCrd2g+nJOazsSZQcGyVxHw6GgUFx1ZJzCcjUVBwbJXEfDzcCAqurXjMR0MRUHBtxWM+HIyAgnMrGnNuoAEUnFvRmA/660HBuRWNeb+vHhTcW7GY94w6UHBvxWLe6w2DQmIrEvNuKgwKia1IzDupWlBIbEVi3u6pAYXUliVmD19QFfgCVSvgn3//v29eH0+fpPlocQAAAABJRU5ErkJggg==" alt="Wildcard at 48 pixels" width="48" height="48"></div>
+              <figcaption>48px</figcaption>
+            </figure>
+        </div>
+      </div>
+
+      <div class="toolbars">
+        <div class="toolbar light">
+          <span class="tb-dots"><i></i><i></i><i></i></span>
+          <span class="tb-omni">northwind.example/blog</span>
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAtklEQVR42s2TsQ3CMBBFUzAGRXqSC+zBAhAcYBM6BmIHYghhAUrGoPjoSxfJhc8RiIJIT5a/lOfzl5xlf/Hd9wuMkRT0uznG8E6WX0u8E3JKCm7bChYqeHknU1PQNRUsVEAOpuDaCJRH18iR65Dp6Vyf3skkLnACJdd9PmS8fzBFvMzLpgSJZfwpEMTL9HUJEss4to5vl9nWBYiVscBkme26ALEynpos87yagaQys8wg/IifPMQ30XYVUF55W2UAAAAASUVORK5CYII=" alt="" width="16" height="16">
+          <span class="tb-label">light</span>
+        </div>
+        <div class="toolbar dark">
+          <span class="tb-dots"><i></i><i></i><i></i></span>
+          <span class="tb-omni">northwind.example/blog</span>
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAtklEQVR42s2TsQ3CMBBFUzAGRXqSC+zBAhAcYBM6BmIHYghhAUrGoPjoSxfJhc8RiIJIT5a/lOfzl5xlf/Hd9wuMkRT0uznG8E6WX0u8E3JKCm7bChYqeHknU1PQNRUsVEAOpuDaCJRH18iR65Dp6Vyf3skkLnACJdd9PmS8fzBFvMzLpgSJZfwpEMTL9HUJEss4to5vl9nWBYiVscBkme26ALEynpos87yagaQys8wg/IifPMQ30XYVUF55W2UAAAAASUVORK5CYII=" alt="" width="16" height="16">
+          <span class="tb-label">dark</span>
+        </div>
+      </div>
+
+      <div class="note"><p><b>A page that is a shell — so, a film-set facade.</b> A cornice-capped false front with a doorway you see straight through, held up from behind by a single diagonal prop, standing on a ground line.</p><p>The brief's own phrase for a client-rendered page is “a shell”, and a facade <em>is</em> a shell: it passes as a building from the street — ranks in Google, passes every SEO check — and has nothing behind it. The tool's whole job is walking round the back to show you the prop.</p><p>The doorway is <b>real alpha transparency</b>, so the browser toolbar itself shows through the front. Whatever is behind this page, it is only ever the browser.</p><p>One construction-rust family, every tone pinned inside Y ∈ [0.19, 0.22] — the only band clearing 3:1 against both toolbar greys. Measured <b>3.51–3.88:1</b> light, <b>3.32–3.68:1</b> dark on every solid pixel.</p><p><b>Honest caveat, and it is mine rather than the designer's:</b> the concept is the sharpest of the four and the execution is the most ambiguous. At a glance it can read as an arch, or as a letterform with a slash. The prop is the weak element — a diagonal can never be grid-aligned, so it antialiases, and the ~2.5px daylight triangle beneath it is what carries “propped” rather than “buttressed”. That triangle is the first thing a poor downscaler would lose.</p><p><b>Rejected:</b> a key blank (reads as a password manager); an empty plinth (in an SEO toolbar a podium reads as “rankings” — actively misleading); a bridge with the span missing (two blocks and a gap, says nothing); a prism (stock creative-tool mark); a bottom-open arch (read as the letter <b>n</b>); a round-capped strut (read as a mug handle).</p></div>
+    </article>
+  </div>
+
+  <footer class="page-foot">
+    <b>To adopt one:</b> copy its four PNGs over <code>ai-crawlability-lens/icons/</code>.
+    The manifest already points at <code>icon16/32/48/128.png</code>, so nothing else changes.
+    Generators live in <code>tools/icon-concepts/</code> and are dependency-free — re-run one to
+    tweak a colour or proportion.
+  </footer>
+</div>

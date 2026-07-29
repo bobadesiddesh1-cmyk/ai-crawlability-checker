@@ -1,0 +1,344 @@
+/* popup/popup.css — dark-mode aware, no external references of any kind. */
+
+/* ---------------------------------------------------------------------------
+   Palette, derived from the mark.
+   ---------------------------------------------------------------------------
+   The icon is vermilion decaying into burnt orange, so the neutrals carry a
+   warm bias — a blue-grey next to that accent reads as two unrelated products
+   sharing a window.
+
+   --brand is used for ONE meaning: content the machine cannot see. It is the
+   mark's colour and the overlay's highlight colour and the critical colour,
+   because in this product those are the same fact. Anything that is merely a
+   control (the Check button, a selected tab) uses --accent, which is ink, not
+   brand — otherwise the alarm colour is spent on furniture and stops meaning
+   anything.
+
+   --amber is deliberately pushed toward ochre. A conventional amber sits close
+   enough to vermilion to read as a weaker version of it, which would blur the
+   line between "at risk" and "cannot be seen".
+   --------------------------------------------------------------------------- */
+:root {
+  --bg: #fffefd;
+  --fg: #1a1512;
+  --muted: #6b615a;
+  --line: #e8e1db;
+  --card: #faf7f4;
+  --accent: #1a1512;          /* ink — controls, not brand */
+  --accent-fg: #fffefd;
+
+  --brand: #e93e12;           /* the mark: content that does not reach the crawler */
+  --brand-2: #d26516;         /* the mark's far end, for the one gradient we keep */
+
+  --red: #b4300e;      --red-bg: #fde7e0;
+  --amber: #8a5a00;    --amber-bg: #fbf0d8;
+  --green: #1f6b45;    --green-bg: #ddf2e6;
+  --info: #2c5578;     --info-bg: #dfeaf3;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14100e;
+    --fg: #efe9e4;
+    --muted: #9c9089;
+    --line: #2a231f;
+    --card: #1c1714;
+    --accent: #efe9e4;
+    --accent-fg: #14100e;
+
+    --brand: #ff6a3d;         /* lifted off the dark ground; same hue family */
+    --brand-2: #f0873a;
+
+    --red: #ffb4a0;      --red-bg: #5c1a08;
+    --amber: #f2ce7a;    --amber-bg: #4a3208;
+    --green: #9be0bc;    --green-bg: #10402a;
+    --info: #a9c9e6;     --info-bg: #1e3550;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  width: 420px;
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 13px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------------------------------------------------------- header */
+
+.head {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; gap: 10px; align-items: flex-start; }
+/* The real icon file, not a CSS reproduction of it. A hand-drawn copy in CSS
+   silently drifts the moment the icon changes — this cannot. */
+.logo { width: 26px; height: 26px; flex: 0 0 26px; display: block; }
+h1 { font-size: 14.5px; margin: 0; letter-spacing: -0.01em; }
+.tagline { margin: 1px 0 0; font-size: 11.5px; color: var(--muted); }
+.page-url {
+  margin-top: 9px; font-size: 11px; color: var(--muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* --------------------------------------------------------------- layout */
+
+main { padding: 0 16px; }
+.section { padding: 14px 0; border-bottom: 1px solid var(--line); }
+.section:last-child { border-bottom: 0; }
+.section-head { display: flex; align-items: center; justify-content: space-between; }
+.h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; font-weight: 650; }
+.hint { font-size: 11.5px; color: var(--muted); margin: 8px 0 0; }
+.row { display: flex; gap: 8px; margin-top: 12px; }
+.hidden { display: none !important; }
+
+/* -------------------------------------------------------------- buttons */
+
+button { font: inherit; cursor: pointer; border-radius: 7px; }
+
+.primary {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  border: 1px solid var(--accent);
+  font-weight: 600;
+}
+.primary:hover:not(:disabled) { opacity: .9; }
+.primary:disabled { opacity: .45; cursor: not-allowed; }
+
+.secondary {
+  flex: 1;
+  padding: 8px 10px;
+  background: var(--card);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  font-weight: 550;
+}
+.secondary:hover { border-color: var(--muted); }
+
+.ghost {
+  padding: 8px 10px;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
+.ghost:hover { color: var(--fg); }
+
+.link {
+  all: unset;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 11px;
+  text-decoration: underline;
+}
+.link:hover { color: var(--fg); }
+
+/* -------------------------------------------------------------- notices */
+
+.notice {
+  margin-top: 10px; padding: 9px 11px; border-radius: 7px; font-size: 12px;
+}
+.notice.warn  { background: var(--amber-bg); color: var(--amber); }
+.notice.error { background: var(--red-bg); color: var(--red); }
+.notice.info  { background: var(--info-bg); color: var(--info); }
+.notice.good  { background: var(--green-bg); color: var(--green); }
+.notice strong { display: block; margin-bottom: 3px; }
+
+/* ------------------------------------------------------------- progress */
+
+.bar { height: 5px; background: var(--card); border-radius: 999px; overflow: hidden; border: 1px solid var(--line); }
+/* The icon's ember ramp — vermilion into burnt orange — so the one moving
+   element in the UI belongs to the same identity as the mark. */
+.bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--brand), var(--brand-2)); transition: width .25s ease; }
+
+/* ---------------------------------------------------------------------------
+   The block strip — the icon, drawn from real data.
+   ---------------------------------------------------------------------------
+   One square per content block, in document order. Solid ink means the block
+   is in the HTML the crawler received; a shrunken vermilion square means it
+   only exists after JavaScript runs.
+
+   Because the squares stay in document order, the strip shows WHERE a page
+   comes apart, not just how much — a page that is solid then decays looks like
+   the mark, and a page riddled with gaps looks nothing like it. That is real
+   information: the first is a lazy-loaded tail, the second is a hydration
+   problem throughout.
+   --------------------------------------------------------------------------- */
+.blockstrip {
+  display: flex; flex-wrap: wrap; gap: 3px;
+  margin: 8px 0 2px;
+}
+.blockstrip i {
+  width: 9px; height: 9px; border-radius: 1.5px;
+  background: var(--fg);
+  display: block; flex: none;
+}
+.blockstrip i.off {
+  background: var(--brand);
+  /* Shrunk rather than faded: at this size opacity reads as antialiasing,
+     where a smaller solid square reads as loss. */
+  transform: scale(.55);
+}
+.blockstrip-key {
+  display: flex; gap: 12px; font-size: 10.5px; color: var(--muted);
+  margin-top: 6px;
+}
+.blockstrip-key span { display: inline-flex; align-items: center; gap: 5px; }
+.blockstrip-key i { width: 9px; height: 9px; border-radius: 1.5px; background: var(--fg); flex: none; }
+.blockstrip-key i.off { background: var(--brand); transform: scale(.55); }
+
+/* --------------------------------------------------------------- banner */
+
+.banner { padding: 10px 12px; border-radius: 7px; font-size: 12px; margin-bottom: 8px; }
+.banner.critical { background: var(--red-bg); color: var(--red); }
+.banner.info { background: var(--info-bg); color: var(--info); }
+.banner.good { background: var(--green-bg); color: var(--green); }
+.banner strong { display: block; margin-bottom: 3px; font-size: 12px; }
+.banner ul { margin: 6px 0 0; padding-left: 16px; }
+.banner li { margin-bottom: 2px; }
+.banner code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; }
+
+/* ---------------------------------------------------------------- table */
+
+.table-wrap { overflow-x: auto; }
+table.bots { width: 100%; border-collapse: collapse; font-size: 12px; }
+table.bots th {
+  text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--muted); font-weight: 600; padding: 0 6px 5px; border-bottom: 1px solid var(--line);
+}
+table.bots th.num, table.bots td.num { text-align: right; }
+table.bots td { padding: 7px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.bots tr:last-child td { border-bottom: 0; }
+.bot-name { font-weight: 600; }
+.bot-sub { display: block; color: var(--muted); font-size: 10.5px; font-weight: 400; }
+
+.pill { display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: 10.5px; font-weight: 650; white-space: nowrap; }
+.pill.red { background: var(--red-bg); color: var(--red); }
+.pill.amber { background: var(--amber-bg); color: var(--amber); }
+.pill.green { background: var(--green-bg); color: var(--green); }
+.pill.none { background: var(--card); color: var(--muted); border: 1px solid var(--line); }
+
+/* ----------------------------------------------------------------- tabs */
+
+.tabs { display: flex; flex-wrap: wrap; gap: 5px; }
+.tab {
+  padding: 4px 9px; border: 1px solid var(--line); background: var(--card);
+  color: var(--fg); font-size: 11.5px; display: inline-flex; align-items: center; gap: 5px;
+  border-radius: 999px;
+}
+.tab:hover { border-color: var(--muted); }
+.tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.tab .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+.dot.red { background: #dc2626; }
+.dot.amber { background: #d97706; }
+.dot.green { background: #16a34a; }
+.dot.none { background: #9ca3af; }
+
+/* -------------------------------------------------------------- verdict */
+
+/* The page-level answer. Deliberately NOT another red block — it is the
+   summary, and the banners beneath it are the evidence. A neutral card with a
+   severity-coloured edge keeps that hierarchy legible. */
+.page-verdict {
+  background: var(--card);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--muted);
+  border-radius: 7px;
+  padding: 10px 13px;
+  margin-bottom: 10px;
+}
+.page-verdict.good { border-left-color: #16a34a; }
+.page-verdict.warn { border-left-color: #d97706; }
+.page-verdict.critical { border-left-color: #dc2626; }
+.page-verdict .kicker {
+  display: block; font-size: 9.5px; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; margin-bottom: 4px;
+}
+.page-verdict.good .kicker { color: var(--green); }
+.page-verdict.warn .kicker { color: var(--amber); }
+.page-verdict.critical .kicker { color: var(--red); }
+.page-verdict b { display: block; font-size: 13px; margin-bottom: 4px; }
+.page-verdict p { margin: 0; font-size: 12px; color: var(--muted); }
+
+.verdict { border-radius: 7px; padding: 10px 12px; font-size: 12px; }
+.verdict.good { background: var(--green-bg); color: var(--green); }
+.verdict.warn { background: var(--amber-bg); color: var(--amber); }
+.verdict.critical { background: var(--red-bg); color: var(--red); }
+.verdict b { display: block; margin-bottom: 4px; }
+.verdict p { margin: 0; }
+.verdict p + p { margin-top: 6px; }
+.verdict .fix { font-weight: 600; }
+.verdict .fix::before { content: "Fix: "; font-weight: 700; }
+
+/* The gate chain: the ordered sequence a real request has to pass. */
+.gates { list-style: none; margin: 10px 0 0; padding: 0; }
+.gate { display: flex; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 11.5px; }
+.gate:first-child { border-top: 0; }
+.gate.is-skip { opacity: .55; }
+.gate .g {
+  flex: none; width: 15px; height: 15px; margin-top: 1px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 9px; font-weight: 700; line-height: 1;
+}
+.g.pass { background: var(--green-bg); color: var(--green); }
+.g.fail { background: var(--red-bg); color: var(--red); }
+.g.warn { background: var(--amber-bg); color: var(--amber); }
+.g.skip { background: var(--card); color: var(--muted); border: 1px solid var(--line); }
+.gate b { display: block; font-weight: 600; }
+.gate span { color: var(--muted); }
+
+/* --------------------------------------------------------------- detail */
+
+.detail { margin-top: 10px; }
+.stat-row { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; border-top: 1px dashed var(--line); font-size: 12px; }
+.stat-row:first-child { border-top: 0; }
+.stat-row b { font-variant-numeric: tabular-nums; }
+.excerpts { margin: 8px 0 0; padding-left: 16px; max-height: 190px; overflow: auto; }
+.excerpts li { font-size: 11.5px; margin-bottom: 4px; color: var(--fg); }
+.excerpts .tag { color: var(--muted); font-size: 10px; text-transform: uppercase; margin-right: 5px; }
+
+/* ----------------------------------------------------------------- card */
+
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 11px 12px; }
+.card h3 { margin: 0 0 5px; font-size: 12.5px; }
+.card p { margin: 0 0 6px; font-size: 12px; }
+.card p:last-child { margin-bottom: 0; }
+.card .muted { color: var(--muted); font-size: 11.5px; }
+.card code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .92em;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0 3px;
+}
+
+/* -------------------------------------------------------------- history */
+
+.history { list-style: none; margin: 0; padding: 0; }
+.history li {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 0; border-top: 1px solid var(--line); font-size: 11.5px;
+}
+.history li:first-child { border-top: 0; }
+.history .h-main { flex: 1; min-width: 0; }
+.history .h-title { display: block; font-weight: 550; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.history .h-meta { display: block; color: var(--muted); font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.history .empty { color: var(--muted); padding: 6px 0; }
+
+/* ---------------------------------------------------------------- footer */
+
+.foot {
+  padding: 11px 16px 14px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 11px;
+}
+.foot strong { color: var(--fg); }
+.foot code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.foot .link { display: block; margin-top: 6px; }
