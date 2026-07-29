@@ -152,7 +152,7 @@ async function init() {
  * @returns {string}
  */
 function fetchCountPhrase() {
-  return `Fetches this page ${BOTS.length} times — once as each crawler —`;
+  return `Fetches this page ${BOTS.length} times — once as each crawler, paced a little apart so your server does not rate-limit the check —`;
 }
 
 function wireEvents() {
@@ -388,6 +388,20 @@ function renderBanners() {
     );
   }
 
+  const throttled = r.order.map((id) => r.perBot[id]).filter((b) => b && b.status === 'throttled');
+  if (throttled.length) {
+    ui.banners.appendChild(
+      banner(
+        'warn',
+        'Incomplete — the server rate-limited this check',
+        `${throttled.map((b) => `${b.label} (HTTP ${b.httpStatus})`).join(', ')} ` +
+          `${throttled.length === 1 ? 'was' : 'were'} answered with "too many requests" and could not be ` +
+          'measured. This is a limit on how fast the check asks for the page, not a rule about these ' +
+          'crawlers — do not read it as bot blocking. Re-check to fill the gap.'
+      )
+    );
+  }
+
   if (r.robots.state === 'unreachable' || r.robots.state === 'unknown') {
     ui.banners.appendChild(
       banner(
@@ -464,6 +478,10 @@ function renderBotTable() {
     const tdFetch = document.createElement('td');
     if (b.status === 'ok') tdFetch.appendChild(pill('green', `OK ${b.httpStatus}`));
     else if (b.status === 'blocked') tdFetch.appendChild(pill('red', `Blocked ${b.httpStatus}`));
+    // Amber, not red: nothing is wrong with the site, the measurement did not
+    // happen. Red here would read as "this bot is blocked", which is the exact
+    // wrong conclusion.
+    else if (b.status === 'throttled') tdFetch.appendChild(pill('amber', `Rate-limited ${b.httpStatus}`));
     else tdFetch.appendChild(pill('amber', b.httpStatus ? `Error ${b.httpStatus}` : 'Error'));
 
     // Score

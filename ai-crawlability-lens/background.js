@@ -56,8 +56,45 @@ const FETCH_TIMEOUT_MS = 8000;
  */
 const MAX_HTML_CHARS = 3000000;
 
-/** HTTP statuses that mean "this bot was actively turned away", not "broken". */
-const BLOCKING_STATUSES = new Set([401, 403, 406, 429, 451]);
+/**
+ * HTTP statuses that mean "this bot was actively turned away", not "broken".
+ *
+ * 429 is deliberately NOT here. It means "you asked too fast", which is a
+ * statement about this extension's own request rate, not about the bot's
+ * User-Agent — and reporting it as a bot block would be a false CRITICAL
+ * pointing at a WAF rule that does not exist. It gets its own status.
+ */
+const BLOCKING_STATUSES = new Set([401, 403, 406, 451]);
+
+/** Statuses that mean "ask again later" rather than "no". */
+const THROTTLE_STATUSES = new Set([429, 503]);
+
+/**
+ * Pause between consecutive page fetches.
+ *
+ * Nine requests for the same URL in under a second is a burst pattern, and it
+ * is exactly what a rate limiter is built to catch. The irony is specific: the
+ * later bots in the sequence get throttled, the tool reports them as blocked,
+ * and the user goes looking for a bot-management rule that was never there.
+ *
+ * 400ms costs about 3s across the run and takes the burst below the threshold
+ * of every default limiter we could find documented. Sites that are stricter
+ * announce it with a 429, and the pacing adapts from there.
+ */
+const BASE_PACING_MS = 400;
+
+/** Ceiling for adaptive pacing, so one hostile origin cannot stall the run. */
+const MAX_PACING_MS = 4000;
+
+/**
+ * Ceiling for an honoured `Retry-After`. Some CDNs answer with minutes, which
+ * is not a wait a popup can survive — past this we stop and say so instead of
+ * pretending to still be working.
+ */
+const MAX_RETRY_WAIT_MS = 10000;
+
+/** Attempts per bot: the original plus one retry after a throttle. */
+const MAX_ATTEMPTS = 2;
 
 /* ------------------------------------------------------------------------- */
 /* Lifecycle                                                                  */
@@ -127,13 +164,27 @@ async function runFetchPipeline(pageUrl) {
   const robots = await checkRobots(origin, url);
   const perBot = {};
 
+  // One pacer for the whole run: what one bot learns about this origin's rate
+  // limiting has to slow down the bots that follow, or the run keeps walking
+  // into the same wall.
+  const pacer = createPacer();
+
   // Strictly one bot at a time. See the header comment.
   let done = 1;
-  for (const bot of BOTS) {
+  for (const [index, bot] of BOTS.entries()) {
+    // No pause before the first: nothing has been requested yet except
+    // robots.txt, which is a different, cheap, usually-cached file.
+    if (index > 0) {
+      await pacer.pause((ms) =>
+        emitProgress('fetch', `Pausing ${Math.round(ms / 100) / 10}s to avoid rate limits…`, done, BOTS.length + 1)
+      );
+    }
     emitProgress('fetch', `Fetching as ${bot.label}…`, done, BOTS.length + 1);
-    perBot[bot.id] = await fetchAsBot(bot, url.href, origin);
+    perBot[bot.id] = await fetchAsBot(bot, url.href, origin, pacer, done);
     done += 1;
   }
+
+  const throttled = Object.values(perBot).filter((b) => b.status === 'throttled');
 
   emitProgress('done', 'Comparing against the rendered page…', done, BOTS.length + 1);
 
@@ -144,6 +195,14 @@ async function runFetchPipeline(pageUrl) {
     checkedAt: new Date().toISOString(),
     robots,
     perBot,
+    // Surfaced at the top level so the UI can say "these results are
+    // incomplete" without every consumer re-deriving it from perBot.
+    throttling: {
+      any: throttled.length > 0,
+      count: throttled.length,
+      botIds: throttled.map((b) => b.botId),
+      finalPacingMs: pacer.current()
+    },
     baselineBotId: BASELINE_BOT_ID,
     bots: BOTS.map((b) => ({
       id: b.id,
@@ -250,10 +309,10 @@ async function checkRobots(origin, url) {
  * @param {string} pageUrl
  * @param {string} origin
  */
-async function fetchAsBot(bot, pageUrl, origin) {
+async function fetchAsBot(bot, pageUrl, origin, pacer, done) {
   const started = Date.now();
 
-  /** @type {'ok'|'blocked'|'error'} */
+  /** @type {'ok'|'blocked'|'throttled'|'error'} */
   let status = 'error';
   let httpStatus = null;
   let html = '';
@@ -263,34 +322,77 @@ async function fetchAsBot(bot, pageUrl, origin) {
   let ruleInstalled = false;
   let truncated = false;
   let fullByteLength = 0;
+  let attempts = 0;
+  let retryWaitedMs = 0;
 
   try {
     await installUaRule(bot.ua, origin);
     ruleInstalled = true;
 
-    const res = await timedFetch(pageUrl, {
-      credentials: 'omit', // fetch as a logged-out crawler; a session cookie
-      cache: 'no-store', // would show content no bot could ever see
-      redirect: 'follow'
-    });
+    // The rule stays installed across a retry — the retry is the same bot
+    // asking again, so swapping it would defeat the point.
+    while (attempts < MAX_ATTEMPTS) {
+      attempts += 1;
 
-    httpStatus = res.status;
-    finalUrl = res.url || pageUrl;
-    contentType = res.headers.get('content-type');
+      const res = await timedFetch(pageUrl, {
+        credentials: 'omit', // fetch as a logged-out crawler; a session cookie
+        cache: 'no-store', // would show content no bot could ever see
+        redirect: 'follow'
+      });
 
-    // Read the body to completion BEFORE the rule is swapped. This is the
-    // ordering that makes the sequential design actually race-free.
-    const fullText = await res.text();
-    truncated = fullText.length > MAX_HTML_CHARS;
-    html = truncated ? fullText.slice(0, MAX_HTML_CHARS) : fullText;
-    fullByteLength = fullText.length;
+      httpStatus = res.status;
+      finalUrl = res.url || pageUrl;
+      contentType = res.headers.get('content-type');
 
-    if (res.ok) {
-      status = 'ok';
-    } else if (BLOCKING_STATUSES.has(res.status)) {
-      status = 'blocked';
-    } else {
-      status = 'error';
+      const throttling = THROTTLE_STATUSES.has(res.status);
+      const retryAfterMs = parseRetryAfter(res.headers.get('retry-after'));
+
+      // Read the body to completion BEFORE the rule is swapped. This is the
+      // ordering that makes the sequential design actually race-free.
+      const fullText = await res.text();
+      truncated = fullText.length > MAX_HTML_CHARS;
+      html = truncated ? fullText.slice(0, MAX_HTML_CHARS) : fullText;
+      fullByteLength = fullText.length;
+
+      if (res.ok) {
+        status = 'ok';
+        break;
+      }
+
+      if (throttling) {
+        // Every subsequent bot slows down too — the limiter is per-origin, not
+        // per-User-Agent, so the next bot would hit the same wall otherwise.
+        pacer.backOff();
+
+        // A 503 with no Retry-After is an outage, not a rate limit. Saying
+        // "you are being throttled" about a down server sends the user to the
+        // wrong dashboard.
+        const isRateLimit = res.status === 429 || retryAfterMs !== null;
+
+        const canRetry =
+          attempts < MAX_ATTEMPTS &&
+          isRateLimit &&
+          (retryAfterMs === null || retryAfterMs <= MAX_RETRY_WAIT_MS);
+
+        if (canRetry) {
+          const wait = Math.min(retryAfterMs ?? pacer.current(), MAX_RETRY_WAIT_MS);
+          emitProgress(
+            'fetch',
+            `${bot.label} was rate-limited — waiting ${Math.round(wait / 100) / 10}s and retrying…`,
+            done,
+            BOTS.length + 1
+          );
+          retryWaitedMs += wait;
+          await sleep(wait);
+          continue;
+        }
+
+        status = isRateLimit ? 'throttled' : 'error';
+        break;
+      }
+
+      status = BLOCKING_STATUSES.has(res.status) ? 'blocked' : 'error';
+      break;
     }
   } catch (err) {
     error = describeError(err);
@@ -317,10 +419,15 @@ async function fetchAsBot(bot, pageUrl, origin) {
     html,
     byteLength: fullByteLength || html.length,
     truncated,
+    attempts,
+    retryWaitedMs,
     // A same-origin redirect keeps the spoofed UA; a cross-origin one does not
     // (the rule is anchored to the original origin). Surfaced rather than hidden.
     redirectedCrossOrigin: finalUrl ? !finalUrl.startsWith(origin) : false,
-    elapsedMs: Date.now() - started
+    // Time spent on the wire, not time spent waiting out a Retry-After. A
+    // 5s throttle wait is not the server taking 5s to answer, and the two
+    // get read as the same number if they are added together.
+    elapsedMs: Date.now() - started - retryWaitedMs
   };
 }
 
@@ -399,6 +506,61 @@ function emitProgress(stage, label, completed, total) {
   } catch {
     /* No receiver. Not a problem. */
   }
+}
+
+/** Promise-based pause. */
+function sleep(ms) {
+  return ms > 0 ? new Promise((resolve) => setTimeout(resolve, ms)) : Promise.resolve();
+}
+
+/**
+ * Read a `Retry-After` header.
+ *
+ * RFC 9110 allows either a delay in seconds or an HTTP-date, and CDNs use both.
+ * Returns milliseconds, or null when the header is absent or unparseable —
+ * null means "no instruction", which is different from "wait zero".
+ *
+ * @param {string|null} value
+ * @returns {number|null}
+ */
+function parseRetryAfter(value) {
+  if (!value) return null;
+  const raw = value.trim();
+
+  // Seconds form. Guard against "0abc" parsing loosely and against negatives.
+  if (/^\d+$/.test(raw)) return Number(raw) * 1000;
+
+  const when = Date.parse(raw);
+  if (!Number.isNaN(when)) return Math.max(0, when - Date.now());
+
+  return null;
+}
+
+/**
+ * Per-run request pacing.
+ *
+ * Only ever slows down. A site that rate-limited the third bot has not stopped
+ * rate-limiting by the sixth, and speeding back up on one success would just
+ * rediscover the limit — with the cost landing on a later bot whose result then
+ * looks like a block.
+ *
+ * @returns {{pause: (onWait?: (ms: number) => void) => Promise<void>,
+ *            backOff: () => void, current: () => number}}
+ */
+function createPacer() {
+  let delay = BASE_PACING_MS;
+
+  return {
+    current: () => delay,
+    backOff: () => {
+      delay = Math.min(delay * 2, MAX_PACING_MS);
+    },
+    async pause(onWait) {
+      // Only announce a wait the user would otherwise experience as a freeze.
+      if (onWait && delay > BASE_PACING_MS) onWait(delay);
+      await sleep(delay);
+    }
+  };
 }
 
 /**

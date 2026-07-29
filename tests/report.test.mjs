@@ -91,6 +91,31 @@ is((await rp.locator('table').count()) >= 3, true, 'report has the per-bot, robo
 await rp.screenshot({path: join(tmpdir(),'report.png'), fullPage:true});
 console.log('screenshot: '+join(tmpdir(),'report.png'));
 
+/* --- a rate-limited bot must not read as bot blocking in the report ------- */
+// The report is what gets sent to a client's developer. A false "Server-level
+// bot blocking" here costs someone an afternoon in a WAF console.
+const limitedResult = JSON.parse(JSON.stringify(out.res.result));
+const victim = limitedResult.order.find((id) => limitedResult.perBot[id].status === 'ok');
+limitedResult.perBot[victim].status = 'throttled';
+limitedResult.perBot[victim].httpStatus = 429;
+limitedResult.perBot[victim].scoreMeaningful = false;
+limitedResult.perBot[victim].score = null;
+
+const limitedHtml = buildReportHtml(limitedResult, out.framework);
+is(limitedHtml.includes('Rate-limited 429'), true, 'a throttled bot gets a rate-limited pill');
+is(limitedHtml.includes('the server rate-limited this check'), true,
+   'and an explicit incomplete-run banner');
+// Scoped to the banner itself. A proximity regex fails here for the wrong
+// reason: the fixture's real 403 banner sits directly above the new 429 one.
+const blockingBanner = limitedHtml
+  .split('<div class="banner')
+  .find((chunk) => chunk.includes('Server-level bot blocking'));
+is(blockingBanner !== undefined, true, 'the fixture still has a genuine 403 banner to compare against');
+is(blockingBanner.includes('429'), false, 'and no 429 is listed inside it');
+is(blockingBanner.includes(limitedResult.perBot[victim].label), false,
+   'the rate-limited bot is not named as server-blocked');
+is(limitedHtml.includes('banner warn'), true, 'the banner is a warning, not a critical');
+
 await check.close(); await ctx.close(); server.close();
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);

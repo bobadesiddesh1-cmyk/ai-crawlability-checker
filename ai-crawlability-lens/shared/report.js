@@ -92,6 +92,7 @@ export function buildReportHtml(result, framework) {
     (v) => v && !v.allowed
   );
   const serverBlocked = bots.filter((b) => b.status === 'blocked');
+  const throttledBots = bots.filter((b) => b.status === 'throttled');
 
   return `<!doctype html>
 <html lang="en">
@@ -130,6 +131,7 @@ export function buildReportHtml(result, framework) {
   .sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; word-break: break-all; }
   .banner { border-radius: 8px; padding: 12px 14px; margin: 14px 0; font-size: 14px; }
   .banner.critical { background: var(--redbg); color: var(--red); }
+  .banner.warn { background: var(--amberbg); color: var(--amber); }
   .banner.info { background: var(--infobg); color: var(--info); }
   .banner.good { background: var(--greenbg); color: var(--green); }
   .banner strong { display: block; margin-bottom: 4px; }
@@ -201,7 +203,7 @@ export function buildReportHtml(result, framework) {
 
   ${renderPageVerdict(result.pageVerdict)}
   ${renderKpis(result, bots)}
-  ${renderCriticalBanner(blockedBots, blockedTokens, serverBlocked)}
+  ${renderCriticalBanner(blockedBots, blockedTokens, serverBlocked, throttledBots)}
   ${renderCloakingBanner(result.cloaking)}
   ${renderDiagnosis(bots, result.url)}
 
@@ -379,7 +381,7 @@ function renderDiagnosis(bots, pageUrl) {
       .join('\n')}`;
 }
 
-function renderCriticalBanner(blockedBots, blockedTokens, serverBlocked) {
+function renderCriticalBanner(blockedBots, blockedTokens, serverBlocked, throttledBots) {
   const parts = [];
 
   if (blockedBots.length) {
@@ -411,6 +413,16 @@ function renderCriticalBanner(blockedBots, blockedTokens, serverBlocked) {
     </div>`);
   }
 
+  if (throttledBots && throttledBots.length) {
+    parts.push(`<div class="banner warn">
+      <strong>Incomplete \u2014 the server rate-limited this check</strong>
+      ${esc(throttledBots.map((b) => `${b.label} (HTTP ${b.httpStatus})`).join(', '))}
+      ${throttledBots.length === 1 ? 'was' : 'were'} answered with "too many requests", so
+      ${throttledBots.length === 1 ? 'it was' : 'they were'} never measured. This is a limit on how fast
+      the check asks for the page, not a rule about those crawlers \u2014 it is not bot blocking.
+    </div>`);
+  }
+
   return parts.join('\n');
 }
 
@@ -431,6 +443,7 @@ function renderBotRow(b) {
   let fetchPill;
   if (b.status === 'ok') fetchPill = `<span class="pill green">OK ${esc(b.httpStatus)}</span>`;
   else if (b.status === 'blocked') fetchPill = `<span class="pill red">Blocked ${esc(b.httpStatus)}</span>`;
+  else if (b.status === 'throttled') fetchPill = `<span class="pill amber">Rate-limited ${esc(b.httpStatus)}</span>`;
   else fetchPill = `<span class="pill amber">Error${b.httpStatus ? ' ' + esc(b.httpStatus) : ''}</span>`;
 
   const scoreCell =

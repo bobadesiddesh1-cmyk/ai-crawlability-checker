@@ -90,6 +90,41 @@ result. `cache: 'no-store'` avoids scoring a stale cached body.
 
 ---
 
+## 3a. Request pacing, and why a 429 is not a block
+
+**Decision:** 400 ms between consecutive page fetches, doubling to a 4 s ceiling after any
+throttle signal. HTTP 429 gets its own `throttled` status — it is **not** in
+`BLOCKING_STATUSES` — and one retry is made, honouring `Retry-After` up to 10 s.
+
+**Why the pacing:** the tool asks for the same URL once per crawler. With nine crawlers
+that is nine requests in well under a second, which is precisely the burst signature rate
+limiters exist to catch. The failure mode was not "the check errors" — it was worse than
+that. The limiter would let the early bots through and start refusing the later ones, and
+because 429 was originally classified as blocking, the report would state that the site's
+firewall turns away whichever crawlers happened to be at the end of the sequence. A
+confident, specific, entirely fabricated finding, pointing the user at a bot-management
+console to hunt for a rule that never existed. The tool would have manufactured the exact
+class of error it exists to prevent.
+
+400 ms costs about three seconds across a run and takes the burst below the documented
+default of every limiter we could check. Sites stricter than that announce it with a 429,
+and the pacing adapts.
+
+**Why the pacer only ever slows down:** a site that limited the third bot has not stopped
+limiting by the sixth. Speeding back up after one success just rediscovers the limit, and
+the cost lands on a later bot whose result then looks like a block.
+
+**Why 503 is treated differently from 429:** a 503 *with* `Retry-After` is a rate limit; a
+503 *without* one is an outage. Calling an outage "throttling" sends the user to the wrong
+dashboard, so only the former is retried and reported as throttled.
+
+**What a throttled bot reports:** no score (`null`, not `0`), no cloaking comparison, and a
+page-level verdict that leads with **Incomplete** rather than claiming every crawler is
+fine. A bot that was never measured must not be counted as readable or unreadable — either
+would turn a hole in the data into a finding about the page.
+
+---
+
 ## 4. Where each stage runs
 
 | Stage | Runs in | Why |
