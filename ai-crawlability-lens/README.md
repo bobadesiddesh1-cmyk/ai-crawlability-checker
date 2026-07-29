@@ -488,8 +488,12 @@ with no DOM or network dependency — they can be reasoned about, and tested, in
 
 **Name:** AI Crawlability Lens
 
-**Short description** (132 char limit):
-> See your page as GPTBot, PerplexityBot and ClaudeBot see it — raw, unrendered. Find what AI search engines can't read.
+**Short description** (132 char limit): taken from `description` in
+[`manifest.json`](manifest.json) — the dashboard pre-fills this field from the uploaded
+package, and `tools/package.js` refuses to build if it exceeds the cap. Do not keep a
+second draft here; it would only ever disagree with what ships.
+
+> Fetch your page exactly as GPTBot, PerplexityBot and ClaudeBot see it — raw and unrendered. 100% local, no account, no server.
 
 **Category:** Developer Tools
 
