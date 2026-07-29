@@ -18,6 +18,7 @@ import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { BOTS } from '../ai-crawlability-lens/data/bot-user-agents.js';
 
 const { chromium } = await (async () => {
   // Playwright is a dev-only dependency and may be installed globally.
@@ -204,10 +205,15 @@ for (const bot of R.bots) {
   const m = body.match(/Fetched by user agent: ([^<]*)/);
   uaByBot[bot.id] = m ? m[1].trim() : null;
 }
-is(uaByBot.googlebot && uaByBot.googlebot.includes('Googlebot/2.1'), true, 'Googlebot UA reached the server');
-is(uaByBot.bingbot && uaByBot.bingbot.includes('bingbot/2.0'), true, 'Bingbot UA reached the server');
-is(uaByBot.gptbot && uaByBot.gptbot.includes('GPTBot/1.2'), true, 'GPTBot UA reached the server');
-is(uaByBot.claudebot && uaByBot.claudebot.includes('ClaudeBot/1.0'), true, 'ClaudeBot UA reached the server');
+// Assert the server received EXACTLY the declared string, rather than a
+// hand-copied fragment of it. The first version of this test pinned
+// "GPTBot/1.2"; when OpenAI moved to 1.4 the test failed on the fix rather
+// than on the bug. Comparing against the source of truth cannot drift.
+for (const bot of BOTS) {
+  const received = uaByBot[bot.id];
+  if (R.perBot[bot.id].status !== 'ok') continue;
+  is(received, bot.ua, `${bot.label} received its declared User-Agent verbatim`);
+}
 is(
   uaByBot.generic && !/bot/i.test(uaByBot.generic),
   true,

@@ -25,10 +25,27 @@
  * exactly what the Generic baseline already measures.
  *
  * ---------------------------------------------------------------------------
- * MAINTENANCE
+ * MAINTENANCE — READ THIS BEFORE TRUSTING A RESULT
  * ---------------------------------------------------------------------------
- * User-Agent strings drift. Each entry carries `source` and `lastVerified` so
- * refreshing them is a mechanical job rather than an archaeological one.
+ * User-Agent strings drift, and a stale one fails SILENTLY. The tool still
+ * fetches, diffs, scores and reports with full confidence — it is just
+ * answering "what does this string see" rather than "what does GPTBot see".
+ *
+ * It corrupts exactly the two findings that depend on the server recognising
+ * the UA: server-level blocking, and cloaking. A WAF that blocks the real
+ * GPTBot may not match a stale string, so the tool reports "GPTBot can read
+ * this" when it cannot. The rendering diff is unaffected — absent cloaking,
+ * every non-JS fetch receives identical HTML whatever the UA.
+ *
+ * So each entry carries `source` and `lastVerified`. To re-check, open the
+ * source URL and compare the string CHARACTER BY CHARACTER, including
+ * parenthesis placement — a 2026-07-29 pass against the live docs found
+ * GPTBot pinned at 1.2 when OpenAI had moved to 1.4, and PerplexityBot with
+ * its closing parenthesis in the wrong place.
+ *
+ * STILL UNCONFIRMED: ClaudeBot and Bingbot. Neither vendor page states the
+ * string in fetchable HTML, so both are from observed traffic rather than a
+ * quotable source. Treat them as the least reliable rows here.
  */
 
 /**
@@ -55,8 +72,8 @@ export const BOTS = [
     executesJs: true,
     isBaseline: false,
     note: 'Renders JavaScript on a delayed budget. A low raw score here is a warning, not a verdict.',
-    source: 'https://developers.google.com/search/docs/crawling-indexing/overview-google-crawlers',
-    lastVerified: '2026-07-29'
+    source: 'https://developers.google.com/search/docs/crawling-indexing/google-common-crawlers',
+    lastVerified: '2026-07-29 (checked against the live docs page)'
   },
   {
     id: 'bingbot',
@@ -72,24 +89,24 @@ export const BOTS = [
   {
     id: 'gptbot',
     label: 'GPTBot',
-    ua: 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; GPTBot/1.2; +https://openai.com/gptbot',
+    ua: 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; GPTBot/1.4; +https://openai.com/gptbot',
     robotsTokens: ['GPTBot'],
     executesJs: false,
     isBaseline: false,
     note: 'OpenAI. Raw HTML only — no JavaScript execution. What you see here is all it ever gets.',
     source: 'https://platform.openai.com/docs/bots',
-    lastVerified: '2026-07-29'
+    lastVerified: '2026-07-29 (checked against the live docs page)'
   },
   {
     id: 'perplexitybot',
     label: 'PerplexityBot',
-    ua: 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot',
+    ua: 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)',
     robotsTokens: ['PerplexityBot'],
     executesJs: false,
     isBaseline: false,
     note: 'Perplexity. Raw HTML only — no JavaScript execution.',
     source: 'https://docs.perplexity.ai/guides/bots',
-    lastVerified: '2026-07-29'
+    lastVerified: '2026-07-29 (checked against the live docs page)'
   },
   {
     id: 'claudebot',
