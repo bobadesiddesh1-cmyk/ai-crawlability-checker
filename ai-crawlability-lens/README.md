@@ -26,6 +26,14 @@ Screenshots are of a deliberately client-rendered demo site whose `robots.txt` d
 GPTBot and Google-Extended, and whose server returns 403 to PerplexityBot — so every
 finding type appears at once. Dark mode: [`popup-dark.png`](../docs/screenshots/popup-dark.png).
 
+**The mark** is *dissolve*: a solid mass whose right edge comes apart into discrete
+squares that thin out and stop before the far edge — coherent matter, serrated edge,
+scatter, void. The surviving fraction is about a third of the frame, which is roughly
+what a client-rendered page actually delivers to a crawler. Every tone is pinned near
+relative luminance Y=0.213, the only band clearing 3:1 against both Chrome toolbar
+greys, so the hue travels and the contrast does not. See
+[`tools/README.md`](../tools/README.md) to regenerate it.
+
 ---
 
 ## The problem this exists for

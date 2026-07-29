@@ -1,5 +1,12 @@
-// Generates the extension icons as real PNGs — no build step in the extension
-// itself, this is a one-off asset generator.
+// SUPERSEDED — this draws the ORIGINAL lens icon, which is no longer the mark.
+// The shipped icon is now "dissolve"; regenerate it with:
+//
+//     node tools/icon-concepts/dissolve.js ai-crawlability-lens/icons
+//
+// Kept because every concept generator adapted its PNG encoder — zlib plus
+// hand-built chunks and CRCs, 4x supersampled and box-downsampled — and this is
+// the clearest copy of it. It writes only where you point it (argv[2]) and has
+// no default output path, so it cannot clobber the shipped icons by accident.
 const fs = require('fs');
 const zlib = require('zlib');
 const path = require('path');

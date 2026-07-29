@@ -19,7 +19,8 @@ Load it unpacked at `chrome://extensions`. No build step, no dependencies.
 | [`ai-crawlability-lens/`](ai-crawlability-lens) | The extension. This folder is what you load unpacked. |
 | [`ai-crawlability-lens/DECISIONS.md`](ai-crawlability-lens/DECISIONS.md) | Every non-obvious design choice and why it was made. |
 | [`tests/`](tests) | Verification suites — 184 assertions, including a real-Chromium end-to-end run. Not part of the extension package. |
-| [`tools/make-icons.js`](tools/make-icons.js) | One-off generator for the icon PNGs. |
+| [`tools/`](tools) | Dependency-free icon generators and the concept comparison sheet. See [`tools/README.md`](tools/README.md). |
 | [`docs/screenshots/`](docs/screenshots) | UI screenshots, captured from the real extension against a demo fixture site. |
+| [`docs/icon-sheet.html`](docs/icon-sheet.html) | Icon candidates compared at 16/32/48/128 and in mock browser toolbars. |
 
 ![Popup results](docs/screenshots/popup-results.png)
