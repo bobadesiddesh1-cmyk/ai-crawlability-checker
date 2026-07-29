@@ -358,7 +358,8 @@ const RENDERED_PAGE = `<!doctype html>
   <main>
     <h1>Server rendered headline</h1>
     <p>This paragraph is present in the raw HTML the server returns.</p>
-    <ul><li>Server list item one</li><li>Server list item two</li></ul>
+    <ul><li>Server list item one</li><li>Server list item two</li>
+        <li><style>.mw-parser-output cite.citation{font-style:inherit}</style>List item with nested TemplateStyles CSS</li></ul>
     <div id="late"></div>
   </main>
   <footer><p>Footer boilerplate that must be ignored</p></footer>
@@ -389,15 +390,31 @@ const result = await page.evaluate((rawHtml) => {
 
 is(result.container, 'main', '<main> chosen as the content container');
 is(result.renderedTexts.some((t) => /boilerplate/.test(t)), false, 'nav and footer boilerplate excluded');
-is(result.renderedTexts.length, 7, 'seven rendered content blocks');
+is(result.renderedTexts.length, 8, 'eight rendered content blocks');
+
+// Found in the field on Wikipedia: TemplateStyles puts a <style> inside a <li>,
+// and textContent swallowed the stylesheet as page content. The raw side strips
+// <style> before extracting, so the live side must too — otherwise the two
+// sides measure different things and the CSS surfaces as "invisible content",
+// which is a fabricated finding.
+is(
+  result.renderedTexts.some((t) => t.includes('mw-parser-output') || t.includes('font-style')),
+  false,
+  'nested <style> CSS is never captured as content text'
+);
+is(
+  result.renderedTexts.includes('li:List item with nested TemplateStyles CSS'),
+  true,
+  'but the list item\'s real text still is'
+);
 is(result.rawHasInjected, false, 'DOMParser did NOT execute the page script — the crawler view is faithful');
-is(result.rawCount, 4, 'four blocks in the raw HTML');
+is(result.rawCount, 5, 'five blocks in the raw HTML');
 is(result.invisible, [
   'h2:Client injected heading',
   'p:This paragraph only exists after JavaScript has run on the page.',
   'blockquote:An injected pull quote nobody without JS will ever read.'
 ], 'exactly the JS-injected blocks reported invisible');
-is(result.score, Math.round((5 / 9) * 100), 'heading-weighted score as documented');
+is(result.score, Math.round((6 / 10) * 100), 'heading-weighted score as documented');
 
 const overlay = await page.evaluate(() => {
   const snap = () => document.body.outerHTML;
@@ -407,8 +424,8 @@ const overlay = await page.evaluate(() => {
     botId: 'gptbot',
     order: ['gptbot', 'googlebot'],
     perBot: {
-      gptbot: { label: 'GPTBot', score: 56, band: 'amber', invisibleIndices: [4, 5, 6], visibleIndices: [0, 1, 2, 3], totalBlocks: 7, invisibleHeadings: 1, totalHeadings: 2, status: 'ok', statusLabel: 'OK (200)', robotsBlocked: false },
-      googlebot: { label: 'Googlebot', score: 100, band: 'green', invisibleIndices: [], visibleIndices: [0, 1, 2, 3, 4, 5, 6], totalBlocks: 7, invisibleHeadings: 0, totalHeadings: 2, status: 'ok', statusLabel: 'OK (200)', robotsBlocked: false }
+      gptbot: { label: 'GPTBot', score: 60, band: 'amber', invisibleIndices: [5, 6, 7], visibleIndices: [0, 1, 2, 3, 4], totalBlocks: 8, invisibleHeadings: 1, totalHeadings: 2, status: 'ok', statusLabel: 'OK (200)', robotsBlocked: false },
+      googlebot: { label: 'Googlebot', score: 100, band: 'green', invisibleIndices: [], visibleIndices: [0, 1, 2, 3, 4, 5, 6, 7], totalBlocks: 8, invisibleHeadings: 0, totalHeadings: 2, status: 'ok', statusLabel: 'OK (200)', robotsBlocked: false }
     }
   });
 
@@ -437,7 +454,7 @@ is(overlay.shownOk, true, 'overlay shows');
 is(overlay.hostOutsideBody, true, 'host attached to <html>, not <body> (survives body replacement)');
 is(overlay.pageBodyUnchangedWhileShown, true, 'the page body is untouched while the overlay is shown');
 is(overlay.invisibleBoxes, 3, 'three red boxes for the three invisible blocks');
-is(overlay.visibleBoxes, 4, 'four green outlines for the visible blocks');
+is(overlay.visibleBoxes, 5, 'five green outlines for the visible blocks');
 is(overlay.tabs, 2, 'one tab per bot');
 is(overlay.layerIgnoresPointer, 'none', 'the highlight layer never intercepts clicks');
 is(overlay.panelTakesPointer, 'auto', 'the panel itself is clickable');

@@ -140,6 +140,40 @@
     }
   }
 
+  /** Elements whose text is never page content, even nested inside a block. */
+  const NON_CONTENT_TEXT = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'SVG', 'IFRAME']);
+
+  /**
+   * The text of a block, excluding any nested script/style/noscript subtree.
+   *
+   * `textContent` includes them, and that is a real problem rather than a
+   * theoretical one: found on Wikipedia, where TemplateStyles puts a `<style>`
+   * inside a `<li>`, so the block's text became a stylesheet. The raw-HTML side
+   * strips those tags before extracting, so the live side has to as well —
+   * otherwise the two sides measure different things and the CSS shows up as
+   * "content invisible to crawlers", which is a fabricated finding.
+   *
+   * @param {Element} el
+   * @returns {string}
+   */
+  function blockText(el) {
+    // Fast path — the overwhelming majority of blocks contain none of these.
+    if (!el.querySelector('script, style, noscript, template, svg, iframe')) {
+      return el.textContent || '';
+    }
+    let out = '';
+    (function walk(node) {
+      for (const child of node.childNodes) {
+        if (child.nodeType === 3) {
+          out += child.nodeValue;
+        } else if (child.nodeType === 1 && !NON_CONTENT_TEXT.has(child.tagName)) {
+          walk(child);
+        }
+      }
+    })(el);
+    return out;
+  }
+
   /**
    * Rough measure of how much block text sits inside an element.
    * Used only to break ties between multiple candidate containers.
@@ -275,10 +309,11 @@
       if (isInsideBoilerplate(el, container)) continue;
       if (live && isVisuallyHidden(el)) continue;
 
-      // textContent (not innerText) on BOTH sides of the diff. innerText does
-      // not exist on a DOMParser document, and using different accessors for
-      // the two sides would introduce differences that are not real.
-      const display = normalizeForDisplay(el.textContent || '');
+      // The same accessor on BOTH sides of the diff. innerText does not exist
+      // on a DOMParser document, and using different accessors for the two
+      // sides would introduce differences that are not real — which is exactly
+      // the class of bug blockText() exists to close.
+      const display = normalizeForDisplay(blockText(el));
       if (display.length < MIN_BLOCK_CHARS) continue;
 
       const tag = el.tagName.toLowerCase();

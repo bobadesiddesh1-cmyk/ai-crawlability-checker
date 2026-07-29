@@ -383,6 +383,34 @@ about — 184 assertions across three suites, all passing. The suites live in
 | 18 | Permission denied path | Explains what it needs, stays inactive, no crash, no retry |
 | 19 | Non-http(s) page | Button disabled with the reason stated, rather than failing opaquely |
 
+### Field test against real sites
+
+The suites above run against a controlled fixture with clean markup. The engines were
+also run against live pages — Wikipedia, react.dev and github.com/features/copilot —
+through a local relay, because the build sandbox gives the browser no outbound network.
+
+It earned its keep immediately. On Wikipedia one block came back as
+`li: .mw-parser-output cite.citation{font-style:inherit...}` — **CSS captured as page
+content**. Wikipedia's TemplateStyles puts a `<style>` inside a `<li>`, and `textContent`
+swallowed the stylesheet. The raw-HTML side strips `<style>` before extracting, so the
+live side was measuring something different, and the difference surfaced as "content
+invisible to crawlers" — a fabricated finding. Fixed by extracting block text through a
+walker that skips `script`/`style`/`noscript`/`template` subtrees; Wikipedia went from
+194/195 to 195/195 and its measured content shrank by ~2,100 characters of CSS. There is
+a regression test for it.
+
+Results after the fix:
+
+| Page | Blocks | Score | Notes |
+|---|---|---|---|
+| `en.wikipedia.org/wiki/Web_crawler` | 195 | 100 | Fully server-rendered, as expected |
+| `react.dev` | 98 | 100 | SSG; framework detected as Next.js |
+| `github.com/features/copilot` | 68 | 91 | 8 JS-populated list items correctly flagged |
+
+What this does **not** prove: the relay rewrites URLs, so it cannot exercise real CDN
+behaviour, consent walls, or bot-management rules. Some sites (vercel.com) do not survive
+the rewrite at all. Point the extension at your own sites before trusting it on a client's.
+
 Test 3 is the one that mattered most: `fetch()` drops a `User-Agent` header *silently*,
 so if the DNR rule had not applied, every bot row would have been identical and entirely
 plausible. It had to be proven against a real server, not assumed.
