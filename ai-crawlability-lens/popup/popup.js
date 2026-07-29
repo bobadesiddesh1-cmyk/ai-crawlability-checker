@@ -20,6 +20,7 @@
 import { getHistory, addHistoryEntry, clearHistory } from '../shared/storage.js';
 import { downloadReport } from '../shared/report.js';
 import { getFrameworkFix } from '../data/framework-fixes.js';
+import { BOTS } from '../data/bot-user-agents.js';
 
 /**
  * Injected in this order. html-extractor must precede everything that uses it;
@@ -58,7 +59,8 @@ const ui = {
   recheckBtn: el('recheckBtn'),
   historyList: el('historyList'),
   clearHistoryBtn: el('clearHistoryBtn'),
-  revokeBtn: el('revokeBtn')
+  revokeBtn: el('revokeBtn'),
+  fetchCount: el('fetchCount')
 };
 
 const state = {
@@ -127,17 +129,30 @@ async function init() {
 
   state.origin = parsed.origin;
   state.checkable = true;
+  if (ui.fetchCount) ui.fetchCount.textContent = fetchCountPhrase();
 
   const granted = await chrome.permissions.contains({ origins: [`${state.origin}/*`] });
   ui.revokeBtn.classList.toggle('hidden', !granted);
   if (granted) {
     ui.launchHint.textContent =
-      'Access to this site is already granted. Fetches this page six times — once as each crawler — ' +
-      'and compares the raw HTML they receive against what you can see. Keep this popup open while it runs.';
+      `Access to this site is already granted. ${fetchCountPhrase()} and compares the raw HTML they ` +
+      'receive against what you can see. Keep this popup open while it runs.';
   }
 
   wireEvents();
   await renderHistory();
+}
+
+/**
+ * The number of fetches is the number of bots, so it has to come from the bot
+ * list. It was hard-coded as "six", and adding three crawlers left the UI
+ * confidently stating the wrong number — caught only because it appeared in a
+ * store screenshot.
+ *
+ * @returns {string}
+ */
+function fetchCountPhrase() {
+  return `Fetches this page ${BOTS.length} times — once as each crawler —`;
 }
 
 function wireEvents() {

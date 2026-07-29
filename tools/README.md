@@ -40,10 +40,28 @@ choosing, not the designers.
 | `icon-concepts/*.js` | The other candidates, kept as a record. Each is self-contained. |
 | `build-icon-sheet.js` | Builds the comparison sheet. `--only=a,b,c` and `--no-current` select a subset. |
 | `make-icons.js` | Superseded — draws the original lens mark. Kept as the clearest copy of the PNG encoder. |
+| `package.js` | Builds the Web Store upload zip, and refuses to build one that would fail review. |
+| `make-store-shots.js` | Composes the 1280×800 Store screenshots from the real captured UI. Needs Playwright. |
 
 Every generator is dependency-free: a manual PNG encoder built on `zlib` with
 hand-written chunks and CRCs, drawing at 4× and box-downsampling. There is no canvas
 library available, and adding one for four icons was not a trade worth making.
+
+## Packaging for the Store
+
+```bash
+node tools/package.js          # -> dist/ai-crawlability-lens-<version>.zip
+node tools/make-store-shots.js # -> docs/store/*.png at 1280x800
+```
+
+`package.js` zips the extension directory contents only — tests, docs and generators are
+development artefacts, and every extra file is another thing a reviewer has to account
+for. It aborts if the manifest points at a missing file, the description exceeds the
+Store's 132-character cap, static `host_permissions` have reappeared, or anything looks
+like remote code. Those are all rejections, and they are far cheaper to catch here than
+after a week in the review queue.
+
+See [`../SHIPPING.md`](../SHIPPING.md) for the rest.
 
 ## Verifying an icon
 
