@@ -544,6 +544,18 @@ function renderBotDetail() {
   add('Raw HTML size', `${formatBytes(b.byteLength)}`);
   add('Fetch time', `${b.elapsedMs} ms`);
 
+  // Every access finding rests on the server recognising a User-Agent this tool
+  // hard-codes, and a stale string fails silently. When a bot did not get a
+  // clean response, show exactly what was sent so the finding can be checked
+  // rather than trusted.
+  if (b.status !== 'ok') {
+    const sent = document.createElement('p');
+    sent.className = 'hint';
+    sent.style.wordBreak = 'break-all';
+    sent.textContent = `Sent as: ${b.ua}`;
+    ui.botDetail.appendChild(sent);
+  }
+
   // Anything the verdict does not already cover: an off-origin redirect, a
   // truncated body, a non-HTML Content-Type.
   const extra = supplementaryNotes(b);

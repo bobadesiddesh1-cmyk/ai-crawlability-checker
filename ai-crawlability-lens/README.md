@@ -44,13 +44,22 @@ Most JavaScript-heavy sites operate on an assumption that used to be safe:
 
 AI answer engines don't work that way.
 
-| Crawler | Executes JavaScript? |
-|---|---|
-| Googlebot | Yes, on a delayed render budget |
-| Bingbot | Yes, on a tighter budget |
-| **GPTBot** (OpenAI) | **No** |
-| **PerplexityBot** | **No** |
-| **ClaudeBot** (Anthropic) | **No** |
+| Crawler | Executes JavaScript? | What it decides |
+|---|---|---|
+| Googlebot | Yes, on a delayed render budget | Google Search |
+| Bingbot | Yes, on a tighter budget | Bing, and Copilot |
+| **GPTBot** (OpenAI) | **No** | OpenAI training data |
+| **OAI-SearchBot** (OpenAI) | **No** | **Whether ChatGPT search can cite you** |
+| **ChatGPT-User** (OpenAI) | **No** | Live fetch during an answer |
+| **PerplexityBot** | **No** | Perplexity's index |
+| **Perplexity-User** | **No** | Live fetch during an answer |
+| **ClaudeBot** (Anthropic) | **No** | Anthropic's crawler |
+
+> **GPTBot is not the one that matters most.** GPTBot is training-data crawling;
+> **OAI-SearchBot** builds the index behind ChatGPT search. Disallowing GPTBot while
+> leaving OAI-SearchBot allowed is a common and entirely reasonable configuration — and
+> so is the reverse, by accident. Checking only GPTBot answers the wrong question, in
+> exactly the way checking only Googlebot misses Google-Extended.
 
 A page can look perfect to a human, pass every traditional SEO check, rank in Google —
 and be near-100% invisible to every AI answer engine, because all its content is
@@ -97,7 +106,7 @@ Requires Chrome 116 or later.
 2. Click the extension icon in the toolbar.
 3. Click **Check AI bot visibility on this page**.
 4. Chrome asks for access **to that one site**. Grant it.
-5. Wait a few seconds — six fetches run one at a time. Keep the popup open.
+5. Wait a few seconds — nine fetches run one at a time. Keep the popup open.
 
 You get: a per-bot table, a CRITICAL banner if any bot is blocked in `robots.txt`, a
 cloaking finding, a framework-specific recommendation, an on-page highlight overlay,

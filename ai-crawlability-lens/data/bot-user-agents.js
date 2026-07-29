@@ -7,7 +7,7 @@
  * and shared/report.js.
  *
  * ---------------------------------------------------------------------------
- * WHY THESE SIX
+ * WHY THESE NINE
  * ---------------------------------------------------------------------------
  * They cover the meaningfully distinct behaviours, not every crawler name:
  *
@@ -20,15 +20,43 @@
  *                    every crawler that does not special-case a known bot name,
  *                    and it is the baseline the cloaking check compares against.
  *
- * Adding more AI crawler names would add table rows without adding information:
- * absent cloaking, every non-JS crawler receives byte-identical HTML, which is
- * exactly what the Generic baseline already measures.
+ * A crawler earns a row only if it can produce a DIFFERENT answer from the
+ * Generic baseline. Absent cloaking every non-JS crawler receives byte-identical
+ * HTML, so rendering alone never justifies a row. Two things do:
+ *
+ *   - a distinct robots.txt product token, and
+ *   - a distinct User-Agent that a server may treat differently.
+ *
+ * That is why OAI-SearchBot, ChatGPT-User and Perplexity-User are here. It is
+ * routine to disallow GPTBot — which is training-data crawling — while leaving
+ * OAI-SearchBot allowed, or the reverse by accident. OAI-SearchBot builds the
+ * index behind ChatGPT search, so it, not GPTBot, is the one that decides
+ * whether ChatGPT can cite you. Checking only GPTBot answers the wrong
+ * question, in the same way that checking only Googlebot misses
+ * Google-Extended.
  *
  * ---------------------------------------------------------------------------
- * MAINTENANCE
+ * MAINTENANCE — READ THIS BEFORE TRUSTING A RESULT
  * ---------------------------------------------------------------------------
- * User-Agent strings drift. Each entry carries `source` and `lastVerified` so
- * refreshing them is a mechanical job rather than an archaeological one.
+ * User-Agent strings drift, and a stale one fails SILENTLY. The tool still
+ * fetches, diffs, scores and reports with full confidence — it is just
+ * answering "what does this string see" rather than "what does GPTBot see".
+ *
+ * It corrupts exactly the two findings that depend on the server recognising
+ * the UA: server-level blocking, and cloaking. A WAF that blocks the real
+ * GPTBot may not match a stale string, so the tool reports "GPTBot can read
+ * this" when it cannot. The rendering diff is unaffected — absent cloaking,
+ * every non-JS fetch receives identical HTML whatever the UA.
+ *
+ * So each entry carries `source` and `lastVerified`. To re-check, open the
+ * source URL and compare the string CHARACTER BY CHARACTER, including
+ * parenthesis placement — a 2026-07-29 pass against the live docs found
+ * GPTBot pinned at 1.2 when OpenAI had moved to 1.4, and PerplexityBot with
+ * its closing parenthesis in the wrong place.
+ *
+ * STILL UNCONFIRMED: ClaudeBot and Bingbot. Neither vendor page states the
+ * string in fetchable HTML, so both are from observed traffic rather than a
+ * quotable source. Treat them as the least reliable rows here.
  */
 
 /**
@@ -55,8 +83,8 @@ export const BOTS = [
     executesJs: true,
     isBaseline: false,
     note: 'Renders JavaScript on a delayed budget. A low raw score here is a warning, not a verdict.',
-    source: 'https://developers.google.com/search/docs/crawling-indexing/overview-google-crawlers',
-    lastVerified: '2026-07-29'
+    source: 'https://developers.google.com/search/docs/crawling-indexing/google-common-crawlers',
+    lastVerified: '2026-07-29 (checked against the live docs page)'
   },
   {
     id: 'bingbot',
@@ -72,24 +100,57 @@ export const BOTS = [
   {
     id: 'gptbot',
     label: 'GPTBot',
-    ua: 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; GPTBot/1.2; +https://openai.com/gptbot',
+    ua: 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; GPTBot/1.4; +https://openai.com/gptbot',
     robotsTokens: ['GPTBot'],
     executesJs: false,
     isBaseline: false,
     note: 'OpenAI. Raw HTML only — no JavaScript execution. What you see here is all it ever gets.',
     source: 'https://platform.openai.com/docs/bots',
-    lastVerified: '2026-07-29'
+    lastVerified: '2026-07-29 (checked against the live docs page)'
   },
   {
     id: 'perplexitybot',
     label: 'PerplexityBot',
-    ua: 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot',
+    ua: 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)',
     robotsTokens: ['PerplexityBot'],
     executesJs: false,
     isBaseline: false,
     note: 'Perplexity. Raw HTML only — no JavaScript execution.',
     source: 'https://docs.perplexity.ai/guides/bots',
-    lastVerified: '2026-07-29'
+    lastVerified: '2026-07-29 (checked against the live docs page)'
+  },
+  {
+    id: 'oai-searchbot',
+    label: 'OAI-SearchBot',
+    ua: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36; compatible; OAI-SearchBot/1.4; +https://openai.com/searchbot',
+    robotsTokens: ['OAI-SearchBot'],
+    executesJs: false,
+    isBaseline: false,
+    note: 'OpenAI. Builds the index behind ChatGPT search — this is the one that decides whether ChatGPT can cite you. Distinct from GPTBot, which is training-data crawling.',
+    source: 'https://platform.openai.com/docs/bots',
+    lastVerified: '2026-07-29 (checked against the live docs page)'
+  },
+  {
+    id: 'chatgpt-user',
+    label: 'ChatGPT-User',
+    ua: 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot',
+    robotsTokens: ['ChatGPT-User'],
+    executesJs: false,
+    isBaseline: false,
+    note: 'OpenAI. Fetches a page live when a user or an answer needs it right now. Raw HTML only.',
+    source: 'https://platform.openai.com/docs/bots',
+    lastVerified: '2026-07-29 (checked against the live docs page)'
+  },
+  {
+    id: 'perplexity-user',
+    label: 'Perplexity-User',
+    ua: 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Perplexity-User/1.0; +https://perplexity.ai/perplexity-user)',
+    robotsTokens: ['Perplexity-User'],
+    executesJs: false,
+    isBaseline: false,
+    note: 'Perplexity. User-initiated fetch during an answer, as opposed to bulk crawling. Raw HTML only.',
+    source: 'https://docs.perplexity.ai/guides/bots',
+    lastVerified: '2026-07-29 (checked against the live docs page)'
   },
   {
     id: 'claudebot',
