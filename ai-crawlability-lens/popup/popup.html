@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>AI Crawlability Lens</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+
+<header class="head">
+  <div class="brand">
+    <span class="logo" aria-hidden="true"></span>
+    <div>
+      <h1>AI Crawlability Lens</h1>
+      <p class="tagline">What GPTBot, PerplexityBot and ClaudeBot actually see.</p>
+    </div>
+  </div>
+  <div class="page-url" id="pageUrl" title=""></div>
+</header>
+
+<main>
+
+  <!-- ------------------------------------------------------------------ -->
+  <!-- Idle / launch                                                        -->
+  <!-- ------------------------------------------------------------------ -->
+  <section id="launch" class="section">
+    <button id="checkBtn" class="primary" type="button">Check AI bot visibility on this page</button>
+    <p class="hint" id="launchHint">
+      Fetches this page six times — once as each crawler — and compares the raw HTML they receive
+      against what you can see. Takes a few seconds. Keep this popup open while it runs.
+    </p>
+    <div id="permissionNotice" class="notice warn hidden" role="alert"></div>
+    <div id="errorNotice" class="notice error hidden" role="alert"></div>
+  </section>
+
+  <!-- ------------------------------------------------------------------ -->
+  <!-- Progress                                                             -->
+  <!-- ------------------------------------------------------------------ -->
+  <section id="progress" class="section hidden" aria-live="polite">
+    <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+    <p class="hint" id="progressLabel">Starting…</p>
+  </section>
+
+  <!-- ------------------------------------------------------------------ -->
+  <!-- Results                                                              -->
+  <!-- ------------------------------------------------------------------ -->
+  <section id="results" class="section hidden">
+
+    <div id="banners"></div>
+
+    <h2 class="h2">Per-bot results</h2>
+    <div class="table-wrap">
+      <table class="bots">
+        <thead>
+          <tr>
+            <th>Bot</th>
+            <th>robots.txt</th>
+            <th>Fetch</th>
+            <th class="num">Score</th>
+          </tr>
+        </thead>
+        <tbody id="botRows"></tbody>
+      </table>
+    </div>
+    <p class="hint">
+      Visibility Score = share of your rendered content blocks present in that bot's raw HTML,
+      headings weighted double. Red under 40, amber 40–75, green above 75.
+    </p>
+
+    <h2 class="h2">Inspect a bot</h2>
+    <div class="tabs" id="botTabs" role="tablist"></div>
+    <div id="botDetail" class="detail"></div>
+
+    <div class="row">
+      <button id="overlayBtn" class="secondary" type="button">Highlight invisible content on the page</button>
+    </div>
+
+    <h2 class="h2">Framework and recommendation</h2>
+    <div id="frameworkCard" class="card"></div>
+
+    <div class="row">
+      <button id="exportBtn" class="secondary" type="button">Export HTML report</button>
+      <button id="recheckBtn" class="ghost" type="button">Re-check</button>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------------ -->
+  <!-- History                                                              -->
+  <!-- ------------------------------------------------------------------ -->
+  <section class="section">
+    <div class="section-head">
+      <h2 class="h2">Recent checks</h2>
+      <button id="clearHistoryBtn" class="link" type="button">Clear all</button>
+    </div>
+    <ul id="historyList" class="history"></ul>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <strong>100% local.</strong> No account, no server, no telemetry. The only requests made are to this
+  page and its <code>robots.txt</code>, and only when you click Check.
+  <button id="revokeBtn" class="link hidden" type="button">Revoke access for this site</button>
+</footer>
+
+<script src="popup.js" type="module"></script>
+</body>
+</html>
