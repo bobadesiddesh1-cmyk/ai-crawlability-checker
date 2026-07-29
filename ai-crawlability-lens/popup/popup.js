@@ -518,6 +518,8 @@ function renderBotDetail() {
   // Why this bot can or cannot read the page, and the gate chain behind it.
   if (b.verdict) {
     ui.botDetail.appendChild(renderVerdict(b.verdict));
+    const strip = renderBlockStrip(b);
+    if (strip) ui.botDetail.appendChild(strip);
     const hr = document.createElement('p');
     hr.className = 'hint';
     hr.textContent = 'Measurements';
@@ -586,6 +588,62 @@ function renderBotDetail() {
     more.textContent = `Showing the first ${b.invisibleBlocks.length} of ${b.invisibleCount}.`;
     ui.botDetail.appendChild(more);
   }
+}
+
+/** Above this, the strip stops being readable and starts being wallpaper. */
+const MAX_STRIP_BLOCKS = 240;
+
+/**
+ * The block strip: one square per content block, in document order.
+ *
+ * This is the icon drawn from the page's own data — solid ink where the block
+ * reached the crawler, a shrunken vermilion square where it did not. Keeping
+ * document order is the point: it shows *where* the page comes apart, which
+ * separates a lazy-loaded tail from a hydration problem running throughout.
+ *
+ * @param {Object} b  A per-bot entry.
+ * @returns {HTMLElement|null}
+ */
+function renderBlockStrip(b) {
+  const total = b.totalBlocks;
+  if (!total || !b.scoreMeaningful) return null;
+
+  const invisible = new Set(b.invisibleIndices || []);
+  const shown = Math.min(total, MAX_STRIP_BLOCKS);
+
+  const wrap = document.createElement('div');
+
+  const strip = document.createElement('div');
+  strip.className = 'blockstrip';
+  strip.setAttribute('role', 'img');
+  strip.setAttribute(
+    'aria-label',
+    `${b.visibleCount} of ${total} content blocks reach ${b.label}; ` +
+      `${b.invisibleCount} exist only after JavaScript runs.`
+  );
+
+  for (let i = 0; i < shown; i += 1) {
+    const cell = document.createElement('i');
+    if (invisible.has(i)) cell.className = 'off';
+    strip.appendChild(cell);
+  }
+  wrap.appendChild(strip);
+
+  const key = document.createElement('div');
+  key.className = 'blockstrip-key';
+  key.innerHTML =
+    `<span><i></i>${b.visibleCount} in the HTML</span>` +
+    `<span><i class="off"></i>${b.invisibleCount} JavaScript-only</span>`;
+  wrap.appendChild(key);
+
+  if (total > shown) {
+    const more = document.createElement('p');
+    more.className = 'hint';
+    more.textContent = `Showing the first ${shown} of ${total} blocks.`;
+    wrap.appendChild(more);
+  }
+
+  return wrap;
 }
 
 /**

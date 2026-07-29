@@ -322,6 +322,55 @@ receive the same raw HTML."
 
 ---
 
+## 7a. The visual system, derived from the mark
+
+**Decision:** The icon is *dissolve* — a solid mass decaying into scattered squares —
+and the UI is built from that idea rather than merely painted in its colours.
+
+**Decision:** Neutrals carry a warm bias (`#1a1512` ink, `#6b615a` muted, `#e8e1db`
+rules; `#14100e` ground in dark).
+
+**Why:** the accent is vermilion. A blue-grey neutral beside it reads as two unrelated
+products sharing a window. Nothing else changed but the temperature, and the whole thing
+stopped looking assembled.
+
+**Decision:** `--brand` (`#e93e12`) means exactly one thing: **content the machine cannot
+see.** It is the mark's colour, the overlay highlight colour, and the critical colour,
+because in this product those are the same fact. Controls — the Check button, a selected
+tab — use `--accent`, which is ink.
+
+**Why:** if the alarm colour is also the button colour, it is furniture, and it stops
+meaning anything. The most valuable property of a warning colour is that it is rare.
+
+**Decision:** `--amber` is pushed toward ochre (`#8a5a00`) rather than a conventional
+amber.
+
+**Why:** a normal amber sits close enough to vermilion to read as a weaker version of it,
+which would blur the line between "at risk of not being rendered" and "cannot be seen at
+all" — the single distinction the verdict engine exists to draw.
+
+**Decision: the block strip.** One square per content block, in document order: solid ink
+where the block reached the crawler, a shrunken vermilion square where it did not.
+
+**Why this is not decoration:** it is the icon's metaphor rendered from real data, and it
+carries information the score cannot. Document order shows *where* a page comes apart. A
+page that is solid and then decays looks like the mark and is a lazy-loaded tail; a page
+speckled with gaps throughout is a hydration problem. Both can score 24.
+
+**Decision:** invisible blocks are drawn **shrunken, not faded**.
+
+**Why:** at 9px, opacity is indistinguishable from antialiasing — it reads as a rendering
+artefact. A smaller solid square reads as loss.
+
+**Decision:** the popup header renders `../icons/icon128.png` rather than reproducing the
+mark in CSS.
+
+**Why:** the header previously drew its own copy of the old icon in gradients. Changing
+the icon would have left the header showing the previous mark with nothing failing. A
+second copy of a logo is a bug waiting for a redesign.
+
+---
+
 ## 8. Overlay
 
 **Decision:** A single `position: fixed` host element with `pointer-events: none` and a

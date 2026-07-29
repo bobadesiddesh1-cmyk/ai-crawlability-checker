@@ -1,34 +1,58 @@
 /* popup/popup.css — dark-mode aware, no external references of any kind. */
 
-:root {
-  --bg: #ffffff;
-  --fg: #111827;
-  --muted: #6b7280;
-  --line: #e5e7eb;
-  --card: #f9fafb;
-  --accent: #111827;
-  --accent-fg: #ffffff;
+/* ---------------------------------------------------------------------------
+   Palette, derived from the mark.
+   ---------------------------------------------------------------------------
+   The icon is vermilion decaying into burnt orange, so the neutrals carry a
+   warm bias — a blue-grey next to that accent reads as two unrelated products
+   sharing a window.
 
-  --red: #b91c1c;      --red-bg: #fee2e2;
-  --amber: #92400e;    --amber-bg: #fef3c7;
-  --green: #166534;    --green-bg: #dcfce7;
-  --info: #1e40af;     --info-bg: #dbeafe;
+   --brand is used for ONE meaning: content the machine cannot see. It is the
+   mark's colour and the overlay's highlight colour and the critical colour,
+   because in this product those are the same fact. Anything that is merely a
+   control (the Check button, a selected tab) uses --accent, which is ink, not
+   brand — otherwise the alarm colour is spent on furniture and stops meaning
+   anything.
+
+   --amber is deliberately pushed toward ochre. A conventional amber sits close
+   enough to vermilion to read as a weaker version of it, which would blur the
+   line between "at risk" and "cannot be seen".
+   --------------------------------------------------------------------------- */
+:root {
+  --bg: #fffefd;
+  --fg: #1a1512;
+  --muted: #6b615a;
+  --line: #e8e1db;
+  --card: #faf7f4;
+  --accent: #1a1512;          /* ink — controls, not brand */
+  --accent-fg: #fffefd;
+
+  --brand: #e93e12;           /* the mark: content that does not reach the crawler */
+  --brand-2: #d26516;         /* the mark's far end, for the one gradient we keep */
+
+  --red: #b4300e;      --red-bg: #fde7e0;
+  --amber: #8a5a00;    --amber-bg: #fbf0d8;
+  --green: #1f6b45;    --green-bg: #ddf2e6;
+  --info: #2c5578;     --info-bg: #dfeaf3;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0b1120;
-    --fg: #e5e7eb;
-    --muted: #9ca3af;
-    --line: #1f2937;
-    --card: #111827;
-    --accent: #f9fafb;
-    --accent-fg: #111827;
+    --bg: #14100e;
+    --fg: #efe9e4;
+    --muted: #9c9089;
+    --line: #2a231f;
+    --card: #1c1714;
+    --accent: #efe9e4;
+    --accent-fg: #14100e;
 
-    --red: #fecaca;      --red-bg: #7f1d1d;
-    --amber: #fde68a;    --amber-bg: #78350f;
-    --green: #bbf7d0;    --green-bg: #14532d;
-    --info: #bfdbfe;     --info-bg: #1e3a8a;
+    --brand: #ff6a3d;         /* lifted off the dark ground; same hue family */
+    --brand-2: #f0873a;
+
+    --red: #ffb4a0;      --red-bg: #5c1a08;
+    --amber: #f2ce7a;    --amber-bg: #4a3208;
+    --green: #9be0bc;    --green-bg: #10402a;
+    --info: #a9c9e6;     --info-bg: #1e3550;
   }
 }
 
@@ -130,7 +154,43 @@ button { font: inherit; cursor: pointer; border-radius: 7px; }
 .bar { height: 5px; background: var(--card); border-radius: 999px; overflow: hidden; border: 1px solid var(--line); }
 /* The icon's ember ramp — vermilion into burnt orange — so the one moving
    element in the UI belongs to the same identity as the mark. */
-.bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #E93E12, #D26516); transition: width .25s ease; }
+.bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--brand), var(--brand-2)); transition: width .25s ease; }
+
+/* ---------------------------------------------------------------------------
+   The block strip — the icon, drawn from real data.
+   ---------------------------------------------------------------------------
+   One square per content block, in document order. Solid ink means the block
+   is in the HTML the crawler received; a shrunken vermilion square means it
+   only exists after JavaScript runs.
+
+   Because the squares stay in document order, the strip shows WHERE a page
+   comes apart, not just how much — a page that is solid then decays looks like
+   the mark, and a page riddled with gaps looks nothing like it. That is real
+   information: the first is a lazy-loaded tail, the second is a hydration
+   problem throughout.
+   --------------------------------------------------------------------------- */
+.blockstrip {
+  display: flex; flex-wrap: wrap; gap: 3px;
+  margin: 8px 0 2px;
+}
+.blockstrip i {
+  width: 9px; height: 9px; border-radius: 1.5px;
+  background: var(--fg);
+  display: block; flex: none;
+}
+.blockstrip i.off {
+  background: var(--brand);
+  /* Shrunk rather than faded: at this size opacity reads as antialiasing,
+     where a smaller solid square reads as loss. */
+  transform: scale(.55);
+}
+.blockstrip-key {
+  display: flex; gap: 12px; font-size: 10.5px; color: var(--muted);
+  margin-top: 6px;
+}
+.blockstrip-key span { display: inline-flex; align-items: center; gap: 5px; }
+.blockstrip-key i { width: 9px; height: 9px; border-radius: 1.5px; background: var(--fg); flex: none; }
+.blockstrip-key i.off { background: var(--brand); transform: scale(.55); }
 
 /* --------------------------------------------------------------- banner */
 

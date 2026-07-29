@@ -102,17 +102,17 @@ export function buildReportHtml(result, framework) {
 <title>AI Crawlability report — ${esc(hostOf(result.url))}</title>
 <style>
   :root {
-    --bg: #ffffff; --fg: #111827; --muted: #6b7280; --line: #e5e7eb;
-    --card: #f9fafb; --red: #b91c1c; --redbg: #fee2e2;
-    --amber: #92400e; --amberbg: #fef3c7; --green: #166534; --greenbg: #dcfce7;
-    --info: #1e40af; --infobg: #dbeafe;
+    --bg: #fffefd; --fg: #1a1512; --muted: #6b615a; --line: #e8e1db;
+    --card: #faf7f4; --brand: #e93e12; --red: #b4300e; --redbg: #fde7e0;
+    --amber: #8a5a00; --amberbg: #fbf0d8; --green: #1f6b45; --greenbg: #ddf2e6;
+    --info: #2c5578; --infobg: #dfeaf3;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #0b1120; --fg: #e5e7eb; --muted: #9ca3af; --line: #1f2937;
-      --card: #111827; --red: #fecaca; --redbg: #7f1d1d;
-      --amber: #fde68a; --amberbg: #78350f; --green: #bbf7d0; --greenbg: #14532d;
-      --info: #bfdbfe; --infobg: #1e3a8a;
+      --bg: #14100e; --fg: #efe9e4; --muted: #9c9089; --line: #2a231f;
+      --card: #1c1714; --brand: #ff6a3d; --red: #ffb4a0; --redbg: #5c1a08;
+      --amber: #f2ce7a; --amberbg: #4a3208; --green: #9be0bc; --greenbg: #10402a;
+      --info: #a9c9e6; --infobg: #1e3550;
     }
   }
   * { box-sizing: border-box; }
@@ -172,6 +172,16 @@ export function buildReportHtml(result, framework) {
   .g.warn { background: var(--amberbg); color: var(--amber); }
   .g.skip { background: var(--card); color: var(--muted); border: 1px solid var(--line); }
   .gate b { font-weight: 650; }
+  /* The mark, drawn from the page's own data: one square per content block, in
+     document order. Solid ink reached the crawler; a shrunken vermilion square
+     only exists after JavaScript runs. */
+  .blockstrip { display: flex; flex-wrap: wrap; gap: 3px; margin: 10px 0 5px; }
+  .blockstrip i { width: 10px; height: 10px; border-radius: 2px; background: var(--fg); display: block; flex: none; }
+  .blockstrip i.off { background: var(--brand); transform: scale(.55); }
+  .blockstrip-key { display: flex; gap: 14px; font-size: 11.5px; color: var(--muted); margin-bottom: 4px; }
+  .blockstrip-key i { width: 10px; height: 10px; border-radius: 2px; background: var(--fg);
+                      display: inline-block; margin-right: 5px; vertical-align: -1px; }
+  .blockstrip-key i.off { background: var(--brand); transform: scale(.55); }
   ul.blocks { margin: 6px 0 0; padding-left: 18px; }
   ul.blocks li { margin-bottom: 5px; font-size: 13px; }
   ul.blocks .tag { color: var(--muted); font-size: 11px; text-transform: uppercase; margin-right: 6px; }
@@ -274,6 +284,34 @@ function renderPageVerdict(v) {
   </div>`;
 }
 
+/** Above this the strip stops being readable and starts being wallpaper. */
+const MAX_STRIP_BLOCKS = 240;
+
+/**
+ * One square per content block, in document order — the icon, built from the
+ * page's own measurements. Document order is the point: it shows *where* a page
+ * comes apart, which separates a lazy-loaded tail from a hydration problem
+ * running throughout.
+ *
+ * @param {Object} b
+ * @returns {string}
+ */
+function renderBlockStrip(b) {
+  if (!b.totalBlocks || !b.scoreMeaningful) return '';
+  const invisible = new Set(b.invisibleIndices || []);
+  const shown = Math.min(b.totalBlocks, MAX_STRIP_BLOCKS);
+
+  let cells = '';
+  for (let i = 0; i < shown; i += 1) cells += invisible.has(i) ? '<i class="off"></i>' : '<i></i>';
+
+  return `<div class="blockstrip" role="img" aria-label="${esc(b.visibleCount)} of ${esc(b.totalBlocks)} content blocks reach ${esc(b.label)}">${cells}</div>
+    <div class="blockstrip-key">
+      <span><i></i>${esc(b.visibleCount)} in the HTML</span>
+      <span><i class="off"></i>${esc(b.invisibleCount)} JavaScript-only</span>
+    </div>
+    ${b.totalBlocks > shown ? `<p class="muted">Showing the first ${shown} of ${esc(b.totalBlocks)} blocks.</p>` : ''}`;
+}
+
 /** Glyph per gate state — shape as well as colour, so it survives printing. */
 const GATE_GLYPH = { pass: '✓', fail: '✕', warn: '!', skip: '·' };
 
@@ -300,6 +338,7 @@ function renderDiagnosis(bots) {
           </h3>
           <p><strong>${esc(b.verdict.headline)}</strong></p>
           <p class="muted">${esc(b.verdict.because)}</p>
+          ${renderBlockStrip(b)}
           ${b.verdict.fix ? `<p><strong>Fix:</strong> ${esc(b.verdict.fix)}</p>` : ''}
           <ul class="gates">
             ${b.verdict.gates
