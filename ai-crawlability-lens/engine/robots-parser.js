@@ -104,10 +104,22 @@ export function parseRobotsTxt(text) {
         // Consecutive User-agent lines share one group.
         current.agents.push(value);
       } else {
-        current = { agents: [value], rules: [] };
+        current = { agents: [value], rules: [], crawlDelay: null };
         groups.push(current);
         collectingAgents = true;
       }
+      continue;
+    }
+
+    // Not in RFC 9309, but honoured by Bing, Yandex and most WAF vendors, and
+    // it is the one place a site states the request rate it will tolerate.
+    // Worth reading even though this tool sends one request per crawler.
+    if (field === 'crawl-delay' || field === 'crawldelay') {
+      if (!current) continue;
+      collectingAgents = false;
+      const seconds = Number(value);
+      // Ignore junk and negatives rather than guessing at intent.
+      if (Number.isFinite(seconds) && seconds >= 0) current.crawlDelay = seconds;
       continue;
     }
 
@@ -131,7 +143,7 @@ export function parseRobotsTxt(text) {
       continue;
     }
 
-    // Unknown field (Crawl-delay, Host, Clean-param, ...). Ignored, and
+    // Unknown field (Host, Clean-param, vendor extensions). Ignored, and
     // deliberately does NOT close the agent header.
   }
 
@@ -186,24 +198,95 @@ export function mergeGroupsByAgent(groups) {
  * @returns {{ agentKey: string|null, rules: RobotsRule[], usedWildcard: boolean }}
  */
 export function selectGroupForBot(byAgent, botToken) {
+  const { agentKey, usedWildcard } = selectAgentKey(byAgent.keys(), botToken);
+  if (agentKey === null) return { agentKey: null, rules: [], usedWildcard: false };
+  return { agentKey, rules: byAgent.get(agentKey) || [], usedWildcard };
+}
+
+/**
+ * The group-selection rule on its own: longest case-insensitive prefix match,
+ * with `*` consulted only when nothing specific matched.
+ *
+ * Extracted so rules and Crawl-delay resolve through the same code rather than
+ * through two implementations that agree until one of them is edited.
+ *
+ * @param {Iterable<string>} keys  lowercased agent tokens
+ * @param {string} botToken
+ * @returns {{ agentKey: string|null, usedWildcard: boolean }}
+ */
+export function selectAgentKey(keys, botToken) {
   const token = String(botToken || '').trim().toLowerCase();
 
   let bestKey = null;
-  for (const key of byAgent.keys()) {
-    if (key === '*') continue;
+  let hasWildcard = false;
+  for (const key of keys) {
+    if (key === '*') { hasWildcard = true; continue; }
     if (!token.startsWith(key)) continue;
     if (bestKey === null || key.length > bestKey.length) bestKey = key;
   }
 
-  if (bestKey !== null) {
-    return { agentKey: bestKey, rules: byAgent.get(bestKey) || [], usedWildcard: false };
+  if (bestKey !== null) return { agentKey: bestKey, usedWildcard: false };
+  if (hasWildcard) return { agentKey: '*', usedWildcard: true };
+  return { agentKey: null, usedWildcard: false };
+}
+
+/**
+ * Collect `Crawl-delay` per agent token.
+ *
+ * Where a token appears in several groups, the LARGEST delay wins. The values
+ * disagree only in a malformed file, and in that case the site's most cautious
+ * statement is the honest one to obey.
+ *
+ * @param {RobotsGroup[]} groups
+ * @returns {Map<string, number>}  lowercased token -> seconds
+ */
+export function crawlDelaysByAgent(groups) {
+  /** @type {Map<string, number>} */
+  const byAgent = new Map();
+  for (const group of groups) {
+    if (typeof group.crawlDelay !== 'number') continue;
+    for (const agent of group.agents) {
+      const key = agent.trim().toLowerCase();
+      if (!key) continue;
+      const existing = byAgent.get(key);
+      if (existing === undefined || group.crawlDelay > existing) {
+        byAgent.set(key, group.crawlDelay);
+      }
+    }
+  }
+  return byAgent;
+}
+
+/**
+ * The `Crawl-delay` that applies to one bot, in seconds, or null.
+ *
+ * Resolved through the same group selection as the Allow/Disallow rules: a
+ * bot that obeys the `*` group for rules obeys the `*` group's delay too.
+ *
+ * @param {ParsedRobots} parsed
+ * @param {string} botToken
+ * @returns {number|null}
+ */
+export function crawlDelayForBot(parsed, botToken) {
+  const byAgent = crawlDelaysByAgent(parsed.groups);
+  if (byAgent.size === 0) return null;
+
+  // Selection must consider every declared group, not only those that happen
+  // to carry a delay — otherwise a bot with its own delay-less group would
+  // silently inherit the `*` delay it does not obey.
+  const allKeys = new Set();
+  for (const group of parsed.groups) {
+    for (const agent of group.agents) {
+      const key = agent.trim().toLowerCase();
+      if (key) allKeys.add(key);
+    }
   }
 
-  if (byAgent.has('*')) {
-    return { agentKey: '*', rules: byAgent.get('*') || [], usedWildcard: true };
-  }
+  const { agentKey } = selectAgentKey(allKeys, botToken);
+  if (agentKey === null) return null;
 
-  return { agentKey: null, rules: [], usedWildcard: false };
+  const delay = byAgent.get(agentKey);
+  return delay === undefined ? null : delay;
 }
 
 /**
@@ -395,10 +478,16 @@ export function evaluateBots(parsed, bots, path) {
   for (const bot of bots) {
     /** @type {any} */
     let verdict = null;
+    /** @type {number|null} */
+    let crawlDelay = null;
 
     for (const token of bot.robotsTokens) {
       const r = isPathAllowed(parsed, token, path);
       const candidate = { id: bot.id, label: bot.label, token, ...r };
+
+      // Strictest across a bot's tokens, same rule as the allow/deny verdict.
+      const d = crawlDelayForBot(parsed, token);
+      if (d !== null && (crawlDelay === null || d > crawlDelay)) crawlDelay = d;
 
       if (verdict === null) {
         verdict = candidate;
@@ -408,6 +497,7 @@ export function evaluateBots(parsed, bots, path) {
       }
     }
 
+    if (verdict) verdict.crawlDelay = crawlDelay;
     out[bot.id] = verdict;
   }
 

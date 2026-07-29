@@ -388,6 +388,21 @@ function renderBanners() {
     );
   }
 
+  // Stated, not applied quietly: the run did not fully obey the site's own
+  // declared rate, and a tool that reports on crawler behaviour has no
+  // business hiding that about itself.
+  if (r.throttling && r.throttling.crawlDelayCapped) {
+    ui.banners.appendChild(
+      banner(
+        'info',
+        'robots.txt asks for a longer delay than this check used',
+        `Your robots.txt declares Crawl-delay: ${r.throttling.declaredCrawlDelayMs / 1000}s. ` +
+          `Honouring it across ${r.order.length} crawlers would take minutes, so this check paced at 3s ` +
+          'instead. The results are unaffected — this is about how politely the check asked, not what it found.'
+      )
+    );
+  }
+
   const throttled = r.order.map((id) => r.perBot[id]).filter((b) => b && b.status === 'throttled');
   if (throttled.length) {
     ui.banners.appendChild(

@@ -44,6 +44,7 @@ const tmp = (p) => mkdtempSync(join(tmpdir(), p));
 
 const ROBOTS = `# test fixture
 User-agent: *
+Crawl-delay: 0.6
 Disallow: /private/
 
 User-agent: GPTBot
@@ -137,6 +138,18 @@ const throttleServer = createServer((req, res) => {
   if (req.url === '/robots.txt') {
     res.writeHead(200, { 'content-type': 'text/plain' });
     res.end('User-agent: *\nAllow: /\n');
+    return;
+  }
+
+  // Publishes a request budget and nothing else: the origin stating its own
+  // limit, which beats any constant chosen in advance. 3000ms / 6 left = 500ms.
+  if (req.url === '/budget') {
+    res.writeHead(200, {
+      'content-type': 'text/html; charset=utf-8',
+      'ratelimit-remaining': '6',
+      'ratelimit-reset': '3'
+    });
+    res.end(pageHtml(ua, false));
     return;
   }
 
@@ -286,11 +299,21 @@ is(overlapping, false, 'page requests arrived in order — fetches are sequentia
 // caught — which used to surface as "blocked". Assert the gap is real. 350ms
 // rather than the 400ms constant: timer resolution, not a tolerance for drift.
 const gaps = pageReqs.slice(1).map((r, i) => r.at - pageReqs[i].at);
+// The fixture declares Crawl-delay: 0.6, so the floor is the site's own number
+// rather than the built-in 400ms default. 550 rather than 600: timer
+// resolution, not tolerance for drift.
 is(
-  gaps.every((g) => g >= 350),
+  gaps.every((g) => g >= 550),
   true,
-  `every gap between page fetches is >= 350ms (smallest was ${gaps.length ? Math.min(...gaps) : 'n/a'}ms)`
+  `every gap honours the declared Crawl-delay (smallest was ${gaps.length ? Math.min(...gaps) : 'n/a'}ms)`
 );
+is(R.throttling.declaredCrawlDelayMs, 600, 'the declared Crawl-delay is read from robots.txt');
+is(R.throttling.pacingReason, 'robots', 'and it is what set the pace');
+is(R.throttling.crawlDelayCapped, false, 'a delay this small needs no capping');
+// GPTBot has its own group with no Crawl-delay, so it must not inherit the
+// * delay -- the same asymmetry the rules follow.
+is(R.robots.botVerdicts.gptbot.crawlDelay, null, 'a bot with its own group does not inherit the * delay');
+is(R.robots.botVerdicts.googlebot.crawlDelay, 0.6, 'while a bot without one does');
 
 /* --- robots.txt --------------------------------------------------------- */
 is(R.robots.state, 'ok', 'robots.txt parsed');
@@ -447,6 +470,18 @@ is(T.throttling.finalPacingMs > 400, true, `the pacer backed off (${T.throttling
 /* --- everyone else is unaffected ----------------------------------------- */
 is(T.perBot.googlebot.status, 'ok', 'bots that were never limited still succeed');
 is(T.perBot.generic.status, 'ok', 'including the baseline');
+
+/* --- an advertised budget sets the pace without any 429 ------------------ */
+// The best answer to "what rate is safe" is the one the origin publishes.
+// 6 requests left, window resets in 3s -> 500ms apart, derived not guessed.
+const budget = await driver.evaluate(
+  async (url) => chrome.runtime.sendMessage({ type: 'AICL_RUN_FETCHES', url }),
+  `${THROTTLE_ORIGIN}/budget`
+);
+is(budget.ok, true, `budget run completed${budget.ok ? '' : ': ' + budget.error}`);
+is(budget.result.throttling.any, false, 'no bot was throttled — nothing returned 429');
+is(budget.result.throttling.pacingReason, 'headers', 'the published RateLimit budget set the pace');
+is(budget.result.throttling.finalPacingMs, 500, 'at the rate the headers imply, not a constant');
 
 await ctxB.close();
 
