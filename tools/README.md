@@ -42,6 +42,7 @@ choosing, not the designers.
 | `make-icons.js` | Superseded — draws the original lens mark. Kept as the clearest copy of the PNG encoder. |
 | `package.js` | Builds the Web Store upload zip, and refuses to build one that would fail review. |
 | `make-store-shots.js` | Composes the 1280×800 Store screenshots from the real captured UI. Needs Playwright. |
+| `build-pages.js` | Builds the GitHub Pages site — homepage and the public privacy policy. Dependency-free. |
 
 Every generator is dependency-free: a manual PNG encoder built on `zlib` with
 hand-written chunks and CRCs, drawing at 4× and box-downsampling. There is no canvas
@@ -52,7 +53,14 @@ library available, and adding one for four icons was not a trade worth making.
 ```bash
 node tools/package.js          # -> dist/ai-crawlability-lens-<version>.zip
 node tools/make-store-shots.js # -> docs/store/*.png at 1280x800
+node tools/build-pages.js      # -> docs/index.html, docs/privacy.html
 ```
+
+The Store wants a privacy policy at a public URL rather than a repo file, and that URL has
+to keep saying the same thing as `PRIVACY.md` indefinitely. So `build-pages.js` generates
+`docs/privacy.html` *from* `PRIVACY.md` — one source, no second copy to keep in sync, the
+same reason the popup renders `icon128.png` instead of redrawing the mark in CSS. The
+markdown subset it implements covers exactly what `PRIVACY.md` uses and nothing more.
 
 `package.js` zips the extension directory contents only — tests, docs and generators are
 development artefacts, and every extra file is another thing a reviewer has to account
