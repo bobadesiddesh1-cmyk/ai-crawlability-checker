@@ -19,9 +19,12 @@ Load it unpacked at `chrome://extensions`. No build step, no dependencies.
 | [`ai-crawlability-lens/`](ai-crawlability-lens) | The extension. This folder is what you load unpacked. |
 | [`ai-crawlability-lens/DECISIONS.md`](ai-crawlability-lens/DECISIONS.md) | Every non-obvious design choice and why it was made. |
 | [`tests/`](tests) | Verification suites — 184 assertions, including a real-Chromium end-to-end run. Not part of the extension package. |
-| [`tools/`](tools) | Dependency-free icon generators and the concept comparison sheet. See [`tools/README.md`](tools/README.md). |
+| [`SHIPPING.md`](SHIPPING.md) | How to take it live — Web Store route, internal route, and what only you can do. |
+| [`PRIVACY.md`](PRIVACY.md) | Privacy policy. Needs a public URL before a Store submission. |
+| [`tools/`](tools) | Icon generators, the concept sheet, the Store packager and screenshot builder. See [`tools/README.md`](tools/README.md). |
 | [`docs/screenshots/`](docs/screenshots) | UI screenshots, captured from the real extension against a demo fixture site. |
 | [`docs/icon-sheet.html`](docs/icon-sheet.html) | Icon candidates compared at 16/32/48/128 and in mock browser toolbars. |
+| [`docs/store/`](docs/store) | Chrome Web Store screenshots, 1280×800. |
 | [`docs/ui-demo.html`](docs/ui-demo.html) | Self-contained interactive walkthrough of the UI. Open it in a browser; no server needed. |
 
 ![Popup results](docs/screenshots/popup-results.png)
