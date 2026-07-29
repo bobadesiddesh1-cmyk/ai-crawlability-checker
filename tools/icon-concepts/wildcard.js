@@ -9,9 +9,10 @@
 // tool's job is to walk around the back and show you the strut.
 //
 // Constraints honoured:
-//   * Two shapes: the front (with a knockout doorway) + the strut.
-//   * All structural edges land on whole 1/16ths, so at 16px they are whole
-//     pixels. No half-pixel smear on any load-bearing edge.
+//   * Three shapes: the front (with a knockout doorway), the prop, the ground.
+//   * Every structural edge lands on a whole 1/16th, so at 16px the cornice,
+//     the wall, the 2px jambs, the 3px doorway and the ground line all fall on
+//     whole pixels. Only the prop's diagonal antialiases, by necessity.
 //   * Silhouette-first: works as solid black on white (set FLAT=1 to check).
 //   * Transparent doorway — the void takes on whatever the toolbar is, so the
 //     "nothing behind it" idea is carried by the medium, not by a fill colour.
@@ -83,23 +84,22 @@ const G = {
   // Cornice — the overhanging cap. Architectural cue that says "building
   // front" rather than "board", and it gives the silhouette a T-shouldered
   // top so the wall can never read as a letterform. 1u overhang each side.
-  cornX0: 1,   cornX1: 10,   cornY0: 1,   cornY1: 3,
+  cornX0: 1,   cornX1: 10,   cornY0: 2,   cornY1: 4,
   // The wall of the flat.
-  bodyX0: 2,   bodyX1: 9,    bodyY0: 3,   bodyY1: 14,
-  // Doorway knockout — ENCLOSED (a solid plinth survives beneath it), so the
-  // front stays a mass with a hole in it rather than turning into an arch.
-  // Deliberately huge: 4u x 7u out of an 8u x 11u wall. The front is mostly
-  // hole. Transparent, so whatever is behind the toolbar shows through it.
-  doorX0: 4,   doorX1: 7,    doorSpring: 8,  doorFoot: 12,
-  // The prop that gives the game away. Held at EXACTLY 45deg: a shallow
-  // diagonal can never land on whole pixels and turns to smear at 16px,
-  // whereas 45deg rasterises to a clean stair. It leaves a big open triangle
-  // of daylight between itself, the wall and the ground — that triangle is
-  // what makes the mark read "propped up" rather than "buttressed".
-  // Expressed as a 45deg band  u0 <= (y - x) <= u1  so both ends are FLAT
-  // cuts, not round caps: flush against the wall, flat foot on the ground.
-  // A round cap turned the prop into a mug handle in an earlier pass.
-  kickU0: 0,   kickU1: 2.7,
+  bodyX0: 2,   bodyX1: 9,    bodyY0: 4,   bodyY1: 14,
+  // Doorway knockout — arched, and open at the bottom onto the ground line.
+  // Deliberately huge: 3u x 6.5u out of a 7u wall, leaving 2u jambs. The front
+  // is mostly hole. Left transparent, so the toolbar itself shows through the
+  // doorway: whatever is behind this front, it is only ever the browser.
+  doorX0: 4,   doorX1: 7,    doorSpring: 9,  doorFoot: 14,
+  // The prop that gives the game away. Anchored at the wall's TOP-right corner
+  // and running 1 across : 2.5 down to the ground, which opens a ~6u x 2.5u
+  // triangle of daylight between prop, wall and ground. That triangle is what
+  // makes the mark read "propped up" rather than "buttressed"; a prop meeting
+  // the wall at mid-height read as masonry, and a shallower run smeared at
+  // 16px. Both ends are FLAT cuts — it tucks behind the wall at the top and
+  // sits flat on the ground. An earlier round cap turned it into a mug handle.
+  propX: 9,    propY: 4,     propRun: 1,  propRise: 2.5,  propHalf: 1.4,
   // Ground line — both the wall and the prop stand on it, which closes the
   // daylight triangle and makes "leaning" unmistakable.
   groundX0: 1, groundX1: 15, groundY0: 14, groundY1: 15,
@@ -124,19 +124,17 @@ function inDoorway(x, y) {
   return dx * dx + dy * dy <= DOOR_R * DOOR_R;
 }
 
-function distToSegment(px, py, x1, y1, x2, y2) {
-  const vx = x2 - x1, vy = y2 - y1;
-  const wx = px - x1, wy = py - y1;
-  const t = Math.max(0, Math.min(1, (wx * vx + wy * vy) / (vx * vx + vy * vy)));
-  const dx = px - (x1 + t * vx), dy = py - (y1 + t * vy);
-  return Math.hypot(dx, dy);
-}
 
+// Perpendicular distance to the prop's infinite axis, then flat clips at both
+// ends: it tucks behind the wall at the top and sits flat on the ground at the
+// bottom. Flat cuts matter — a rounded cap turns the prop into a mug handle.
+const PROP_LEN = Math.hypot(G.propRun, G.propRise);
 function inKicker(x, y) {
-  if (x < G.bodyX1) return false;          // starts at the wall's back
-  if (y > G.bodyY1) return false;          // stops on the ground line
-  const u = y - x;                         // constant along a 45deg run
-  return u >= G.kickU0 && u <= G.kickU1;
+  if (y > G.bodyY1) return false;                    // flat foot on the ground
+  if (x < G.bodyX1 - 1) return false;                // tucks behind the wall
+  if (y < G.propY - 1) return false;
+  const d = Math.abs((x - G.propX) * G.propRise - (y - G.propY) * G.propRun) / PROP_LEN;
+  return d <= G.propHalf;
 }
 
 function inGround(x, y) {
@@ -160,7 +158,7 @@ function sample(x, y) {
 // ---------------------------------------------------------------------------
 const RUST_HI  = [0xDB, 0x6E, 0x3A];   // top of the flat, catching light   Y~.24
 const RUST_LO  = [0xB8, 0x4C, 0x22];   // base of the flat                  Y~.16
-const STRUT_C  = [0xBC, 0x52, 0x27];   // the prop — deliberately still      Y~.18
+const STRUT_C  = [0xC8, 0x5D, 0x2E];   // the prop + ground — deliberately    Y~.21
                                        // inside the both-toolbars window.
 
 function lerp3(a, b, t) {

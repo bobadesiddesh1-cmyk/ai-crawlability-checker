@@ -18,7 +18,20 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 const CONCEPTS_DIR = path.join(ROOT, 'docs', 'icon-concepts');
 const SHIPPED_DIR = path.join(ROOT, 'ai-crawlability-lens', 'icons');
-const OUT = process.argv[2] || path.join(ROOT, 'docs', 'icon-sheet.html');
+const args = process.argv.slice(2);
+const OUT = args.find((a) => !a.startsWith('--')) || path.join(ROOT, 'docs', 'icon-sheet.html');
+
+/**
+ * `--only=a,b,c` restricts the sheet to those concept slugs, in that order.
+ * Without it every directory is shown. Once a round has been rejected there is
+ * no value in re-showing it alongside its replacement — it just makes the
+ * comparison harder.
+ */
+const onlyArg = args.find((a) => a.startsWith('--only='));
+const ONLY = onlyArg ? onlyArg.slice('--only='.length).split(',').map((s) => s.trim()).filter(Boolean) : null;
+
+/** `--no-current` drops the shipped icon from the sheet. */
+const SHOW_CURRENT = !args.includes('--no-current');
 
 /** Every size the manifest ships. */
 const SIZES = [16, 32, 48, 128];
@@ -52,15 +65,17 @@ function collect() {
     if (!uri) shippedOk = false;
     shipped[s] = uri;
   }
-  if (shippedOk) {
+  if (shippedOk && SHOW_CURRENT) {
     out.push({ slug: 'current', title: 'Current (shipped)', incumbent: true, icons: shipped });
   }
 
   if (!fs.existsSync(CONCEPTS_DIR)) return out;
 
-  for (const slug of fs.readdirSync(CONCEPTS_DIR).sort()) {
+  const slugs = ONLY || fs.readdirSync(CONCEPTS_DIR).sort();
+
+  for (const slug of slugs) {
     const dir = path.join(CONCEPTS_DIR, slug);
-    if (!fs.statSync(dir).isDirectory()) continue;
+    if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) continue;
 
     const icons = {};
     let ok = true;
@@ -209,11 +224,17 @@ function build(concepts, notes) {
 <div class="shell">
   <header class="page-head">
     <p class="eyebrow">AI Crawlability Lens · icon concepts</p>
-    <h1>Four directions, at the size that actually decides it</h1>
+    <h1>Round two: no tile, no gradient, no stock glyph</h1>
     <p class="lede">
-      Each concept is a real generated PNG set — 16, 32, 48 and 128 — not a sketch.
-      <strong>Judge them in the toolbar strips</strong>, not by the 128px hero: a Chrome action
-      icon lives at 16px, and that is where most icon ideas quietly fall apart.
+      The first round came back as one icon with four different stickers — a rounded square,
+      a blue-to-purple gradient, a stock glyph in the middle. So this round bans the container,
+      the gradient, and the four glyphs that caused it. Every mark below is full-bleed and
+      single-ink.
+    </p>
+    <p class="lede">
+      Each is a real generated PNG set, not a sketch. <strong>Judge them in the toolbar
+      strips</strong>, not by the 128px hero: a Chrome action icon lives at 16px, and that is
+      where icon ideas quietly fall apart.
     </p>
   </header>
 
