@@ -18,7 +18,7 @@ Load it unpacked at `chrome://extensions`. No build step, no dependencies.
 |---|---|
 | [`ai-crawlability-lens/`](ai-crawlability-lens) | The extension. This folder is what you load unpacked. |
 | [`ai-crawlability-lens/DECISIONS.md`](ai-crawlability-lens/DECISIONS.md) | Every non-obvious design choice and why it was made. |
-| [`tests/`](tests) | Verification suites — 245 assertions, including a real-Chromium end-to-end run. Not part of the extension package. |
+| [`tests/`](tests) | Verification suites — 253 assertions, including a real-Chromium end-to-end run. Not part of the extension package. |
 | [`SHIPPING.md`](SHIPPING.md) | The Web Store submission runbook, and the internal route that skips it. |
 | [`PRIVACY.md`](PRIVACY.md) | Privacy policy. The public page at `docs/privacy.html` is generated from this file. |
 | [`tools/`](tools) | Icon generators, the concept sheet, the Store packager and screenshot builder. See [`tools/README.md`](tools/README.md). |

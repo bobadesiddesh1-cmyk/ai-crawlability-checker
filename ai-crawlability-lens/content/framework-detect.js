@@ -183,6 +183,26 @@
       note('window.Shopify / cdn.shopify.com assets');
     }
 
+    /* --- 10a. Adobe Experience Manager --------------------------------- */
+    // The dominant enterprise CMS in banking, insurance and telco, and it was
+    // falling through to "Not identified" — the generic bucket is least useful
+    // exactly where the stack is most complicated. `/etc.clientlibs/` is the
+    // AEM client-library proxy path and `aem-Grid` is the layout container;
+    // both appear in delivered markup and neither has another plausible source.
+    if (
+      !id &&
+      (srcHas(srcs, '/etc.clientlibs/') ||
+        has('link[href*="/etc.clientlibs/"]') ||
+        has('.aem-Grid, .aem-GridColumn') ||
+        has('[data-cmp-is]') ||
+        typeof window.Granite !== 'undefined' ||
+        typeof window.CQURLInfo !== 'undefined' ||
+        typeof window.CQ_Analytics !== 'undefined')
+    ) {
+      id = 'aem';
+      note('AEM markers (/etc.clientlibs, aem-Grid, Granite/CQURLInfo)');
+    }
+
     /* --- 11. WordPress ------------------------------------------------- */
     if (!id && (gen.includes('wordpress') || srcHas(srcs, '/wp-content/') || srcHas(srcs, '/wp-includes/'))) {
       id = 'wordpress';
