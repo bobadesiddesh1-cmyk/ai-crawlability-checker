@@ -423,6 +423,12 @@ is(A.perBot.generic.verdict.severity, 'good', 'reported as good');
 is(A.perBot.generic.verdict.fix, null, 'with nothing to fix');
 is(gs(A.perBot.generic.verdict, 'js'), 'fail', 'while still recording that it cannot run JavaScript');
 
+// The fixture refuses PerplexityBot only, so this must NOT read as site-wide
+// allow-listing — the over-trigger direction, asserted end-to-end.
+is(A.serverBlocking.looksLikeUaAllowlisting, false,
+   'one refused crawler out of nine is a real per-bot rule, not allow-listing');
+is(A.serverBlocking.blockedIds, ['perplexitybot'], 'and the refused bot is named');
+
 is(typeof A.pageVerdict.headline, 'string', 'a page-level verdict is produced');
 is(A.pageVerdict.severity, 'critical', 'critical, because two bots cannot reach the page at all');
 is(A.pageVerdict.headline.includes('GPTBot'), true, 'naming the bots that cannot reach it');

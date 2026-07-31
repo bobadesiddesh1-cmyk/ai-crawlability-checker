@@ -177,6 +177,28 @@
       };
     }
 
+    // Nothing to compare is NOT an all-clear. On a site that refuses every
+    // named crawler and serves only the plain-UA baseline, there are zero
+    // comparable pairs — and "no cloaking detected, all bots receive the same
+    // raw HTML" would be a confident green claim about eight bots that
+    // received nothing at all. Absence of evidence, reported as evidence of
+    // absence, on exactly the page where the user most needs the difference.
+    if (comparisons.length === 0) {
+      return {
+        comparable: false,
+        baselineBotId,
+        baselineLabel,
+        detected: false,
+        comparisons,
+        skipped,
+        headline: 'Cloaking could not be assessed.',
+        detail:
+          `Only the ${baselineLabel} fetch returned content, so there was no second response to ` +
+          'compare it against. This is not a clean bill of health — it means the question could ' +
+          'not be asked. The blocking findings above are the ones that matter here.'
+      };
+    }
+
     return {
       comparable: true,
       baselineBotId,
@@ -186,10 +208,8 @@
       skipped,
       headline: 'No cloaking detected — all bots receive the same raw HTML.',
       detail:
-        comparisons.length > 0
-          ? `Every comparable bot's raw HTML matched the ${baselineLabel} baseline to within ` +
-            `${Math.round(CLOAKING_THRESHOLD * 100)}% of content blocks.`
-          : 'Only the baseline fetch succeeded, so there was nothing to compare — but no divergence was observed.'
+        `Every comparable bot's raw HTML matched the ${baselineLabel} baseline to within ` +
+        `${Math.round(CLOAKING_THRESHOLD * 100)}% of content blocks.`
     };
   }
 

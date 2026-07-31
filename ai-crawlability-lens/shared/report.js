@@ -203,7 +203,7 @@ export function buildReportHtml(result, framework) {
 
   ${renderPageVerdict(result.pageVerdict)}
   ${renderKpis(result, bots)}
-  ${renderCriticalBanner(blockedBots, blockedTokens, serverBlocked, throttledBots)}
+  ${renderCriticalBanner(blockedBots, blockedTokens, serverBlocked, throttledBots, result.serverBlocking && result.serverBlocking.looksLikeUaAllowlisting)}
   ${renderCloakingBanner(result.cloaking)}
   ${renderDiagnosis(bots, result.url)}
 
@@ -381,7 +381,7 @@ function renderDiagnosis(bots, pageUrl) {
       .join('\n')}`;
 }
 
-function renderCriticalBanner(blockedBots, blockedTokens, serverBlocked, throttledBots) {
+function renderCriticalBanner(blockedBots, blockedTokens, serverBlocked, throttledBots, allowlisting) {
   const parts = [];
 
   if (blockedBots.length) {
@@ -406,11 +406,25 @@ function renderCriticalBanner(blockedBots, blockedTokens, serverBlocked, throttl
   }
 
   if (serverBlocked.length) {
-    parts.push(`<div class="banner critical">
+    const names = esc(serverBlocked.map((b) => `${b.label} (HTTP ${b.httpStatus})`).join(', '));
+    parts.push(
+      allowlisting
+        ? `<div class="banner warn">
+      <strong>Every named crawler was refused \u2014 this looks like verified-bot allow-listing</strong>
+      The server returned a refusal status to ${names}. Every crawler User-Agent was refused while a
+      plain browser User-Agent was served normally \u2014 including Googlebot, which a site cannot
+      really be blocking without vanishing from Google. That pattern is a rule admitting crawlers only
+      from their own published IP ranges, and this check runs from an ordinary IP, so it is refused
+      like any other spoofer. Confirm in the server logs before changing anything.
+    </div>`
+        : `<div class="banner critical">
       <strong>Server-level bot blocking</strong>
-      The server returned a refusal status to ${esc(serverBlocked.map((b) => `${b.label} (HTTP ${b.httpStatus})`).join(', '))}.
+      The server returned a refusal status to ${names}.
       This is separate from a low Visibility Score: these bots did not receive the page at all.
-    </div>`);
+      Confirm in the server logs first \u2014 this check sends the right User-Agent but runs from an
+      ordinary IP, not the crawler's published range.
+    </div>`
+    );
   }
 
   if (throttledBots && throttledBots.length) {
@@ -428,7 +442,8 @@ function renderCriticalBanner(blockedBots, blockedTokens, serverBlocked, throttl
 
 function renderCloakingBanner(cloaking) {
   if (!cloaking) return '';
-  const cls = cloaking.detected ? 'info' : 'good';
+  // Green only when a comparison actually ran and came back clean.
+  const cls = cloaking.detected || !cloaking.comparable ? 'info' : 'good';
   return `<div class="banner ${cls}">
     <strong>${esc(cloaking.headline)}</strong>
     ${esc(cloaking.detail)}

@@ -377,13 +377,28 @@ function renderBanners() {
   }
 
   if (serverBlocked.length) {
+    const allowlisting = r.serverBlocking && r.serverBlocking.looksLikeUaAllowlisting;
     ui.banners.appendChild(
       banner(
-        'critical',
-        'Server-level bot blocking',
+        // Downgraded when the pattern says verified-bot allow-listing: a
+        // CRITICAL that sends someone into a WAF console after a rule that is
+        // working as intended is worse than no banner at all.
+        allowlisting ? 'warn' : 'critical',
+        allowlisting
+          ? 'Every named crawler was refused — this looks like verified-bot allow-listing'
+          : 'Server-level bot blocking',
         `The server refused ${serverBlocked
           .map((b) => `${b.label} (HTTP ${b.httpStatus})`)
-          .join(', ')}. This is separate from a low score — these bots received no content at all.`
+          .join(', ')}. ` +
+          (allowlisting
+            ? 'Every crawler User-Agent was refused while a plain browser User-Agent was served ' +
+              'normally — including Googlebot, which a site cannot really be blocking without ' +
+              'vanishing from Google. That pattern is a rule admitting crawlers only from their ' +
+              'own published IP ranges, and this check comes from your IP, so it is refused like ' +
+              'any other spoofer. Confirm in your server logs before changing anything.'
+            : 'This is separate from a low score — these bots received no content at all. ' +
+              'Confirm in your server logs first: this check sends the right User-Agent but ' +
+              'comes from your IP, not the crawler’s published range.')
       )
     );
   }
@@ -431,7 +446,13 @@ function renderBanners() {
 
   if (r.cloaking) {
     ui.banners.appendChild(
-      banner(r.cloaking.detected ? 'info' : 'good', r.cloaking.headline, r.cloaking.detail)
+      // Green is reserved for a comparison that actually ran and came back
+      // clean. "Could not be assessed" is neutral, never reassuring.
+      banner(
+        r.cloaking.detected || !r.cloaking.comparable ? 'info' : 'good',
+        r.cloaking.headline,
+        r.cloaking.detail
+      )
     );
   }
 }

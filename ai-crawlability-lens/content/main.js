@@ -202,6 +202,13 @@
     for (const id of order) {
       perBot[id].verdict = AICL.verdict.buildVerdict(perBot[id], verdictContext);
     }
+
+    // Pure, and therefore unit-testable — see engine/verdict.js for why the
+    // pattern matters.
+    const serverBlocking = AICL.verdict.summariseServerBlocking(
+      order.map((id) => perBot[id]),
+      fetched.baselineBotId
+    );
     const pageVerdict = AICL.verdict.summarisePage(order.map((id) => perBot[id]));
 
     // 5. Cloaking, against the plain-UA baseline.
@@ -253,6 +260,7 @@
       },
       robots: fetched.robots,
       throttling: fetched.throttling,
+      serverBlocking,
       order,
       perBot,
       pageVerdict,
