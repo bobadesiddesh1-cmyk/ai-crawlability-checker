@@ -116,7 +116,10 @@
           uaSpecific,
         fix:
           'This is a firewall, CDN or WAF rule, not a rendering problem. Check your bot-management ' +
-          `settings for a rule matching "${label}" and allow it if you want this page cited.`,
+          `settings for a rule matching "${label}" and allow it if you want this page cited. ` +
+          'Confirm it in your server logs first: this check sends the right User-Agent but comes ' +
+          `from your IP, not ${label}'s published address range, so a rule that filters on IP will ` +
+          'refuse this check and the real crawler differently.',
         gates: [
           robotsGate,
           gate('served', 'Server responds', 'fail', `HTTP ${bot.httpStatus} — the request was refused.`),

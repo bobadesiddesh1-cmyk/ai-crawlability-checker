@@ -430,6 +430,23 @@ plausible. It had to be proven against a real server, not assumed.
 
 Stated rather than hidden:
 
+- **The request comes from your IP, not the crawler's.** This is the big one, and it is
+  not fixable from a browser extension. Real GPTBot traffic arrives from OpenAI's
+  published address ranges, and serious bot management verifies that — by allow-listing
+  the ranges, by reverse DNS, or both. Spoofing the User-Agent does not spoof the network
+  identity, so **the Fetch column is not a reliable verdict on server-level bot blocking**:
+  a site that blocks by IP will serve you happily, and a site that allow-lists GPTBot by
+  IP may refuse you. Both directions are possible. Confirm a suspected block in your
+  server logs, not here.
+
+  What this does *not* affect: robots.txt evaluation, and whether your content is present
+  in the raw HTML. Those are the same for every requester, and they are what this tool is
+  actually for.
+- **Your rendered view is not a neutral baseline.** The comparison is against the page as
+  *you* see it — logged in, consented to cookies, in whatever A/B bucket you landed in.
+  Content visible to you because you are authenticated will be reported as missing from
+  the crawler's HTML, which is true but is an auth finding, not a rendering one. Check as
+  a logged-out user for a clean read.
 - **Cross-origin redirects lose the spoofed UA.** The DNR rule is anchored to the target
   origin, so if the page redirects to another domain the redirect target is fetched as a
   normal browser. This is flagged per row when it happens.
