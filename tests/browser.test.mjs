@@ -615,6 +615,28 @@ is(overlay.pageRestored, true, 'the page is byte-identical after dismissal');
 is(overlay.hostGone, true, 'the host element is removed');
 is(pageErrors, [], 'no page errors');
 
+/* --- framework detection: AEM ------------------------------------------- */
+// The dominant enterprise CMS in BFSI, and it was falling through to "Not
+// identified" on a real HDFC Bank page — the generic recommendation bucket is
+// least useful exactly where the stack is most complicated.
+const detectSrc = readFileSync(join(EXT, 'content', 'framework-detect.js'), 'utf8');
+
+const aemPage = await plain.newPage();
+await aemPage.setContent(`<!doctype html><html><head>
+  <link rel="stylesheet" href="/etc.clientlibs/mysite/clientlibs/clientlib-base.min.css">
+  </head><body><div class="aem-Grid aem-Grid--12"><p>Server rendered copy.</p></div></body></html>`);
+const aem = await aemPage.evaluate(detectSrc);
+is(aem.id, 'aem', 'AEM is detected from /etc.clientlibs and aem-Grid');
+is(/etc\.clientlibs|aem-Grid/i.test(aem.signals.join(' ')), true, 'and the signal is named');
+await aemPage.close();
+
+// The markers must be specific enough not to claim an ordinary page.
+const notAem = await plain.newPage();
+await notAem.setContent('<!doctype html><html><body><div class="grid"><p>Ordinary page.</p></div></body></html>');
+const na = await notAem.evaluate(detectSrc);
+is(na.id === 'aem', false, 'an ordinary page is not mistaken for AEM');
+await notAem.close();
+
 await plain.close();
 
 console.log(`\n${pass} passed, ${fail} failed`);

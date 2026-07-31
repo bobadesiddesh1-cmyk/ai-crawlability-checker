@@ -16,9 +16,14 @@
  *   (a) EXACT — its normalised text appears as a substring anywhere in that
  *       bot's raw block text, or
  *
- *   (b) NEAR — it shares >= 80% of its tokens with some single raw block.
+ *   (b) NEAR — it shares >= 80% of its tokens with some single raw block, or
  *
- * Neither test alone behaves on real pages. Substring alone is too brittle:
+ *   (c) ENVELOPE — some raw block is >= 90% contained within it, and still
+ *       accounts for >= 60% of it. That is JavaScript having DECORATED a
+ *       server-rendered block rather than created it: the text is in the HTML,
+ *       it just gained "(opens in a new tab)" at runtime.
+ *
+ * Neither (a) nor (b) alone behaves on real pages. Substring alone is too brittle:
  * one injected `<span>` at a word boundary turns a genuinely server-rendered
  * paragraph into a false "invisible" finding. Token overlap alone is too loose
  * and starts matching unrelated boilerplate. Substring first with overlap as a
@@ -38,6 +43,33 @@
 
   /** Below this token count, only an EXACT match counts. */
   const MIN_TOKENS_FOR_NEAR_MATCH = 4;
+
+  /**
+   * The "JavaScript decorated a server-rendered block" case.
+   *
+   * A raw block whose tokens are almost entirely present in the rendered block
+   * IS in the HTML — JavaScript only added to it. The commonest cause is an
+   * accessibility affordance: a link labelled "Apply for a Personal Loan" that
+   * gains "(opens in a new tab)" at runtime. Five injected tokens push a short
+   * CTA below the 80% threshold and it gets reported as invisible, which is a
+   * false alarm about content the crawler can read perfectly well.
+   *
+   * Measured the other way round: how much of the RAW block survived into the
+   * rendered one.
+   */
+  const ENVELOPE_RAW_COVERAGE = 0.9;
+
+  /**
+   * ...guarded by how much of the rendered block is still the raw block's text.
+   *
+   * Without this, a genuinely client-rendered paragraph that happens to contain
+   * a short server-rendered fragment ("Apply now" followed by 200 JS-rendered
+   * words) would count as visible — hiding exactly the failure this tool
+   * exists to find. The guard is deliberately the conservative half of the
+   * rule: a false "visible" hides a real problem, which is worse than a false
+   * "invisible" that merely annoys.
+   */
+  const ENVELOPE_MIN_RENDERED = 0.6;
 
   /**
    * Split normalised text into comparison tokens.
@@ -118,7 +150,7 @@
    * @param {{tag: string, text: string, match: string, index: number, weight: number}[]} renderedBlocks
    * @param {{tag: string, text: string, match: string, index: number, weight: number}[]} rawBlocks
    * @returns {{
-   *   results: {index: number, tag: string, text: string, visible: boolean, method: 'exact'|'near'|'none'}[],
+   *   results: {index: number, tag: string, text: string, visible: boolean, method: 'exact'|'near'|'envelope'|'none'}[],
    *   invisibleIndices: number[],
    *   visibleIndices: number[],
    *   visibleCount: number,
@@ -151,7 +183,7 @@
       totalWeight += block.weight;
       if (isHeading) totalHeadings += 1;
 
-      /** @type {'exact'|'near'|'none'} */
+      /** @type {'exact'|'near'|'envelope'|'none'} */
       let method = 'none';
 
       if (block.match && haystack.includes(block.match)) {
@@ -161,15 +193,30 @@
         if (tokens.length >= MIN_TOKENS_FOR_NEAR_MATCH) {
           const needleSet = toMultiset(tokens);
           const needleTotal = tokens.length;
-          // A raw block with fewer than 80% of the needle's tokens can never
-          // reach the threshold, so skip it. This prunes most of the work.
-          const minRawTokens = Math.ceil(needleTotal * NEAR_MATCH_THRESHOLD);
+          // A raw block too small to satisfy EITHER rule can never match, so
+          // skip it. The envelope rule has the lower floor, so it sets the
+          // prune — pruning at 0.8 would discard the very block the envelope
+          // rule exists to catch.
+          const minRawTokens = Math.ceil(
+            needleTotal * Math.min(NEAR_MATCH_THRESHOLD, ENVELOPE_MIN_RENDERED)
+          );
 
           for (const candidate of indexed) {
             if (candidate.total < minRawTokens) continue;
-            if (overlapRatio(needleSet, needleTotal, candidate.set) >= NEAR_MATCH_THRESHOLD) {
+
+            const renderedCovered = overlapRatio(needleSet, needleTotal, candidate.set);
+            if (renderedCovered >= NEAR_MATCH_THRESHOLD) {
               method = 'near';
               break;
+            }
+
+            // The rendered block is the raw block plus JS-added decoration.
+            if (renderedCovered >= ENVELOPE_MIN_RENDERED) {
+              const rawCovered = overlapRatio(candidate.set, candidate.total, needleSet);
+              if (rawCovered >= ENVELOPE_RAW_COVERAGE) {
+                method = 'envelope';
+                break;
+              }
             }
           }
         }

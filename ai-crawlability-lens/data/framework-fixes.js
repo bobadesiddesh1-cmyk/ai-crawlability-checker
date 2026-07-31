@@ -98,6 +98,13 @@ export const FRAMEWORK_FIXES = {
     detail:
       'The initial HTML is an near-empty shell that the browser fills in with JavaScript. Whatever the framework, the fix shape is the same: get the content into the first server response.'
   },
+  aem: {
+    label: 'Adobe Experience Manager',
+    ssrCapable: true,
+    fix: 'AEM renders components server-side by default — invisible blocks are almost always a component that fetches its own content after load, not the CMS itself.',
+    detail:
+      'Check three things in order. Core Components configured to load over AJAX (accordions and tabs that fetch on open are the usual culprits). Experience Fragments pulled in client-side rather than included in the HTL template. And any SPA-editor island — a React or Angular component embedded in the page — which renders nothing into the initial response. If the text is in the HTL/Sightly output it will be in the raw HTML; if a JS component writes it, no AI crawler sees it.'
+  },
   wordpress: {
     label: 'WordPress',
     ssrCapable: true,

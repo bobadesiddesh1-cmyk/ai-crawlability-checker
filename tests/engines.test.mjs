@@ -127,6 +127,43 @@ const near = diff.diffBlocks(
 );
 is(near.visibleCount, 1, '90% token overlap counts as visible');
 
+// The envelope rule: JavaScript DECORATED a server-rendered block rather than
+// creating it. Found on a real HDFC Bank page — a CTA whose link label gained
+// "(opens in a new tab)" at runtime scored 99 instead of 100, reporting content
+// as invisible that every crawler could read.
+const cta = 'So what are you waiting for? Apply for a Personal Loan now!';
+const ctaDecorated = cta.replace('Loan ', 'Loan(opens in a new tab) ');
+const envelope = diff.diffBlocks([mk('p', ctaDecorated, 0)], [mk('p', cta, 0)]);
+is(envelope.visibleCount, 1, 'a JS-injected a11y affordance does not make a block invisible');
+is(envelope.results[0].method, 'envelope', 'and it is recorded as an envelope match, not a near match');
+
+// The guard. A short server-rendered fragment inside a large client-rendered
+// block must STILL be invisible — a false "visible" hides the exact failure
+// this tool exists to find, which is worse than a false alarm.
+const swamped = diff.diffBlocks(
+  [mk('p', 'Apply now ' + Array.from({length: 40}, (_, i) => 'jsword' + i).join(' '), 0)],
+  [mk('p', 'Apply now', 0)]
+);
+is(swamped.visibleCount, 0, 'a short raw fragment swamped by JS content stays invisible');
+
+// Decoration inside a long paragraph was already fine via the 80% rule; assert
+// it did not regress into depending on the new one.
+const longDecorated = diff.diffBlocks(
+  [mk('p', 'A much longer paragraph of genuine article body copy that runs on for a while(opens in a new tab) and keeps going with more words', 0)],
+  [mk('p', 'A much longer paragraph of genuine article body copy that runs on for a while and keeps going with more words', 0)]
+);
+// 21 raw tokens of 26 rendered = 0.808, just over the near threshold. The same
+// five injected tokens fall BELOW it on a shorter block, which is precisely why
+// the envelope rule is needed and why the threshold alone was never enough.
+is(longDecorated.results[0].method, 'near', 'a long decorated paragraph still matches on plain token overlap');
+
+// Unrelated blocks of similar length must not envelope-match each other.
+const unrelated = diff.diffBlocks(
+  [mk('p', 'Completely different sentence about mortgages and interest rates', 0)],
+  [mk('p', 'Nothing whatsoever to do with the other block at all here', 0)]
+);
+is(unrelated.visibleCount, 0, 'unrelated blocks do not envelope-match');
+
 // Short blocks require an exact match.
 const short = diff.diffBlocks([mk('p', 'Buy now', 0)], [mk('p', 'Buy later', 0)]);
 is(short.visibleCount, 0, 'a 2-token block does not near-match');
