@@ -370,5 +370,42 @@
     };
   }
 
-  AICL.verdict = { GOOD_SCORE, POOR_SCORE, buildVerdict, summarisePage };
+  /**
+   * Is the refusal pattern verified-bot allow-listing rather than a decision
+   * to block crawlers?
+   *
+   * Every named crawler refused while a plain browser User-Agent is served is
+   * the signature of a rule that admits crawlers only from their own published
+   * IP ranges and refuses anything merely CLAIMING their User-Agent. That is a
+   * correct, widely recommended posture, and this check — right UA, ordinary
+   * IP — is indistinguishable from the spoofers it exists to stop.
+   *
+   * Googlebot appearing among the refused is the tell: a site genuinely 403ing
+   * Googlebot would have fallen out of Google, so the likelier reading is that
+   * the real crawler, arriving from its own addresses, is let through.
+   *
+   * @param {Array} bots  per-bot entries, in display order
+   * @param {string} baselineBotId
+   * @returns {{blockedIds: string[], baselineOk: boolean, looksLikeUaAllowlisting: boolean}}
+   */
+  function summariseServerBlocking(bots, baselineBotId) {
+    const list = Array.isArray(bots) ? bots : [];
+    const baseline = list.find((b) => b && b.botId === baselineBotId);
+    const baselineOk = !!baseline && baseline.status === 'ok';
+
+    const named = list.filter((b) => b && b.botId !== baselineBotId);
+    const blocked = named.filter((b) => b.status === 'blocked');
+
+    return {
+      blockedIds: blocked.map((b) => b.botId),
+      baselineOk,
+      // More than one, or a single 403 on one crawler — a genuine per-bot
+      // rule, which is the finding as stated — would be misread as a
+      // site-wide allow-list.
+      looksLikeUaAllowlisting:
+        baselineOk && named.length > 1 && blocked.length === named.length
+    };
+  }
+
+  AICL.verdict = { GOOD_SCORE, POOR_SCORE, buildVerdict, summarisePage, summariseServerBlocking };
 })();

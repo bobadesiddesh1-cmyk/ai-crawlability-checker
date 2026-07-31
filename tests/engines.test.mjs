@@ -431,6 +431,66 @@ is(sThrottled.headline.includes('Every AI crawler'), false,
    'it must never claim every crawler is fine when one was never measured');
 is(sThrottled.detail.includes('ClaudeBot'), true, 'naming the bot that was not measured');
 
+// Verified-bot allow-listing. Found on a real site where every named crawler
+// got 403 and only the plain-UA baseline was served — including Googlebot,
+// which no live site is really blocking. A CRITICAL "your server blocks
+// crawlers" there sends someone into a WAF console after a rule that is
+// working exactly as intended.
+const B = (botId, status) => ({ botId, label: botId, status, httpStatus: status === 'ok' ? 200 : 403 });
+
+const allBlocked = verdict.summariseServerBlocking(
+  [B('googlebot', 'blocked'), B('gptbot', 'blocked'), B('claudebot', 'blocked'), B('generic', 'ok')],
+  'generic'
+);
+is(allBlocked.looksLikeUaAllowlisting, true, 'every named crawler refused + baseline served reads as allow-listing');
+is(allBlocked.blockedIds, ['googlebot', 'gptbot', 'claudebot'], 'and the refused bots are named');
+
+// One crawler refused is a real per-bot rule and must stay a plain blocking
+// finding — this is the direction that must not over-trigger.
+const oneBlocked = verdict.summariseServerBlocking(
+  [B('googlebot', 'ok'), B('gptbot', 'blocked'), B('claudebot', 'ok'), B('generic', 'ok')],
+  'generic'
+);
+is(oneBlocked.looksLikeUaAllowlisting, false, 'a single refused crawler is NOT allow-listing');
+
+// If the baseline was refused too, the site is refusing everything and the
+// pattern says nothing about User-Agents.
+const baselineDown = verdict.summariseServerBlocking(
+  [B('googlebot', 'blocked'), B('gptbot', 'blocked'), B('generic', 'blocked')],
+  'generic'
+);
+is(baselineDown.looksLikeUaAllowlisting, false, 'baseline also refused means the pattern does not apply');
+
+/* --------------------------------------------------------------- cloaking */
+// "Nothing to compare" is not an all-clear. On a site refusing every named
+// crawler there are zero comparable pairs, and the old copy still said
+// "No cloaking detected — all bots receive the same raw HTML" in green, about
+// eight bots that received nothing at all.
+const noPairs = cloaking.detectCloaking(
+  {
+    generic: { status: 'ok', httpStatus: 200, rawBlocks: [{ match: 'hello world' }] },
+    gptbot: { status: 'blocked', httpStatus: 403, rawBlocks: [] }
+  },
+  'generic',
+  { generic: 'Generic non-JS bot', gptbot: 'GPTBot' }
+);
+is(noPairs.detected, false, 'nothing to compare is not a detection');
+is(noPairs.comparable, false, 'and it is explicitly NOT comparable, so the UI can refuse to go green');
+is(noPairs.headline, 'Cloaking could not be assessed.', 'the headline says so plainly');
+is(/all bots receive the same/i.test(noPairs.headline), false, 'it never claims all bots got the same HTML');
+is(noPairs.detail.includes('not a clean bill of health'), true, 'and the detail refuses to be read as reassurance');
+
+const realPairs = cloaking.detectCloaking(
+  {
+    generic: { status: 'ok', httpStatus: 200, rawBlocks: [{ match: 'hello world' }] },
+    gptbot: { status: 'ok', httpStatus: 200, rawBlocks: [{ match: 'hello world' }] }
+  },
+  'generic',
+  { generic: 'Generic non-JS bot', gptbot: 'GPTBot' }
+);
+is(realPairs.comparable, true, 'a genuine comparison is still comparable');
+is(realPairs.headline.startsWith('No cloaking detected'), true, 'and still says so when it ran clean');
+
 const sFine = verdict.summarisePage(withVerdicts([
   { label: 'Googlebot', executesJs: true, score: 98 },
   { label: 'GPTBot', score: 98 },
