@@ -191,6 +191,38 @@ for (const size of [16, 32, 48, 128]) {
   console.log(`icon${size}.png  ${png.length} bytes`);
 }
 
+/**
+ * The Chrome Web Store listing icon, which is NOT the same image as the
+ * extension icon.
+ *
+ * A toolbar icon is full bleed — it sits alone at 16px and every pixel counts.
+ * The Store's image guidelines ask the opposite: 128x128 canvas with the
+ * artwork inside a 96x96 box and 16px of transparent margin, because the
+ * listing grid draws icons edge to edge and a full-bleed mark renders visibly
+ * larger than its neighbours.
+ *
+ * Drawn at 96 rather than downscaled from 128: the mark is a 16-cell grid, so
+ * 96 gives exactly 6px cells and stays as crisp as the shipped icons. Rescaling
+ * 128 -> 96 is a 0.75 factor and would soften every edge.
+ *
+ * Not written into the icons directory on purpose — it is not part of the
+ * extension, and tools/package.js zips that directory wholesale.
+ */
+const STORE_ICON = process.argv[3];
+if (STORE_ICON) {
+  const ART = 96;
+  const PAD = (128 - ART) / 2;
+  const art = draw(ART, false);
+  const canvas = Buffer.alloc(128 * 128 * 4); // transparent
+  for (let y = 0; y < ART; y++) {
+    art.copy(canvas, ((y + PAD) * 128 + PAD) * 4, y * ART * 4, (y + 1) * ART * 4);
+  }
+  const png = encodePng(128, 128, canvas);
+  fs.mkdirSync(path.dirname(STORE_ICON), { recursive: true });
+  fs.writeFileSync(STORE_ICON, png);
+  console.log(`${path.basename(STORE_ICON)}  ${png.length} bytes  (96px art, ${PAD}px margin)`);
+}
+
 // Silhouette proof — the mark in flat black, for the "does it hold in one
 // colour" test. Not part of the shipped icon set.
 if (process.env.SILHOUETTE) {

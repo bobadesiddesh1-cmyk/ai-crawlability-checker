@@ -12,10 +12,19 @@ edge, scatter, void.
 Regenerate it in place:
 
 ```bash
-node tools/icon-concepts/dissolve.js ai-crawlability-lens/icons
+node tools/icon-concepts/dissolve.js ai-crawlability-lens/icons docs/store/store-icon-128.png
 ```
 
 That writes `icon16/32/48/128.png`, which is exactly what `manifest.json` points at.
+
+The optional second argument writes the **Store listing icon**, which is not the same
+image. A toolbar icon is full bleed — it sits alone at 16px and every pixel counts. The
+Store's guidelines ask the opposite: 96×96 of artwork inside a 128×128 canvas with 16px
+of transparent margin, because the listing grid draws icons edge to edge and a full-bleed
+mark renders visibly larger than its neighbours. It is drawn at 96 rather than downscaled
+from 128 — the mark is a 16-cell grid, so 96 gives exact 6px cells, where rescaling by
+0.75 would soften every edge. It is written outside the extension directory on purpose:
+`package.js` zips that folder wholesale and the Store icon is not part of the package.
 
 The popup renders `../icons/icon128.png` directly rather than reproducing the mark in
 CSS, so changing the icon changes the popup header too — there is no second copy to
@@ -43,6 +52,7 @@ choosing, not the designers.
 | `package.js` | Builds the Web Store upload zip, and refuses to build one that would fail review. |
 | `make-store-shots.js` | Composes the 1280×800 Store screenshots from the real captured UI. Needs Playwright. |
 | `build-pages.js` | Builds the GitHub Pages site — homepage and the public privacy policy. Dependency-free. |
+| `make-promo-tiles.js` | Builds the 440×280 and 1400×560 Store promo tiles. Needs Playwright. |
 
 Every generator is dependency-free: a manual PNG encoder built on `zlib` with
 hand-written chunks and CRCs, drawing at 4× and box-downsampling. There is no canvas
@@ -54,7 +64,14 @@ library available, and adding one for four icons was not a trade worth making.
 node tools/package.js          # -> dist/ai-crawlability-lens-<version>.zip
 node tools/make-store-shots.js # -> docs/store/*.png at 1280x800
 node tools/build-pages.js      # -> docs/index.html, docs/privacy.html
+node tools/make-promo-tiles.js # -> docs/store/promo-*.png
 ```
+
+The Store demands "JPEG or 24-bit PNG (no alpha)" for screenshots and promo tiles, and
+that is the trap: a PNG written over a transparent ground comes out RGBA and is rejected
+at upload. Every tile paints an opaque background first so the encoder emits RGB, and
+`make-promo-tiles.js` reads the colour-type byte back out of each file it writes and fails
+the build if it is not 2.
 
 The Store wants a privacy policy at a public URL rather than a repo file, and that URL has
 to keep saying the same thing as `PRIVACY.md` indefinitely. So `build-pages.js` generates
