@@ -60,16 +60,31 @@
   const ENVELOPE_RAW_COVERAGE = 0.9;
 
   /**
-   * ...guarded by how much of the rendered block is still the raw block's text.
+   * ...guarded by how much text JavaScript actually added, in TOKENS.
    *
-   * Without this, a genuinely client-rendered paragraph that happens to contain
-   * a short server-rendered fragment ("Apply now" followed by 200 JS-rendered
-   * words) would count as visible — hiding exactly the failure this tool
-   * exists to find. The guard is deliberately the conservative half of the
-   * rule: a false "visible" hides a real problem, which is worse than a false
-   * "invisible" that merely annoys.
+   * This started life as a ratio and that was the wrong shape. A decoration is
+   * a fixed-length phrase, not a proportion: "(opens in a new tab)" is five
+   * tokens whether the block is five words or fifty. Requiring the raw block to
+   * be 60% of the rendered one therefore worked on long paragraphs and failed
+   * on exactly the short CTAs and headings where the affordance is attached —
+   * a four-word heading could never clear it. Measured absolutely, it works at
+   * every length.
+   *
+   * Six covers the affordances that occur in practice ("opens in a new tab",
+   * "opens in a new window", "external link opens in new tab").
    */
-  const ENVELOPE_MIN_RENDERED = 0.6;
+  const ENVELOPE_MAX_ADDED_TOKENS = 6;
+
+  /**
+   * ...and the raw block must be substantial enough to mean something.
+   *
+   * This is the half that stops a false "visible", which is the dangerous
+   * direction: it hides the failure this tool exists to find. A two-token
+   * fragment ("Apply now") followed by 200 client-rendered words is not a
+   * decorated block, it is a client-rendered block. Reusing the near-match
+   * floor, for the same reason it exists there.
+   */
+  const ENVELOPE_MIN_RAW_TOKENS = MIN_TOKENS_FOR_NEAR_MATCH;
 
   /**
    * Split normalised text into comparison tokens.
@@ -194,29 +209,30 @@
           const needleSet = toMultiset(tokens);
           const needleTotal = tokens.length;
           // A raw block too small to satisfy EITHER rule can never match, so
-          // skip it. The envelope rule has the lower floor, so it sets the
-          // prune — pruning at 0.8 would discard the very block the envelope
-          // rule exists to catch.
-          const minRawTokens = Math.ceil(
-            needleTotal * Math.min(NEAR_MATCH_THRESHOLD, ENVELOPE_MIN_RENDERED)
+          // skip it. Whichever rule reaches lower sets the prune — pruning at
+          // the near-match floor alone would discard the very blocks the
+          // envelope rule exists to catch.
+          const minRawTokens = Math.min(
+            Math.ceil(needleTotal * NEAR_MATCH_THRESHOLD),
+            Math.max(ENVELOPE_MIN_RAW_TOKENS, needleTotal - ENVELOPE_MAX_ADDED_TOKENS)
           );
 
           for (const candidate of indexed) {
             if (candidate.total < minRawTokens) continue;
 
-            const renderedCovered = overlapRatio(needleSet, needleTotal, candidate.set);
-            if (renderedCovered >= NEAR_MATCH_THRESHOLD) {
+            if (overlapRatio(needleSet, needleTotal, candidate.set) >= NEAR_MATCH_THRESHOLD) {
               method = 'near';
               break;
             }
 
             // The rendered block is the raw block plus JS-added decoration.
-            if (renderedCovered >= ENVELOPE_MIN_RENDERED) {
-              const rawCovered = overlapRatio(candidate.set, candidate.total, needleSet);
-              if (rawCovered >= ENVELOPE_RAW_COVERAGE) {
-                method = 'envelope';
-                break;
-              }
+            if (
+              candidate.total >= ENVELOPE_MIN_RAW_TOKENS &&
+              needleTotal - candidate.total <= ENVELOPE_MAX_ADDED_TOKENS &&
+              overlapRatio(candidate.set, candidate.total, needleSet) >= ENVELOPE_RAW_COVERAGE
+            ) {
+              method = 'envelope';
+              break;
             }
           }
         }

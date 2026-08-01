@@ -124,6 +124,20 @@
       const entry = perBotRaw[botId];
       const label = labels[botId] || botId;
 
+      // Missing block data is not an empty page. Without this, a bot whose
+      // extraction failed compares as 100% divergent against a baseline that
+      // has content, and the tool accuses the site of cloaking on the strength
+      // of data it does not have. An extracted-but-empty array stays a real
+      // comparison — serving a bot an empty shell IS the finding.
+      if (entry && entry.status === 'ok' && entry.httpStatus === 200 && !Array.isArray(entry.rawBlocks)) {
+        skipped.push({
+          botId,
+          label,
+          reason: 'Block extraction produced no data for this bot, so it cannot be compared.'
+        });
+        continue;
+      }
+
       if (!entry || entry.status !== 'ok' || entry.httpStatus !== 200) {
         skipped.push({
           botId,
