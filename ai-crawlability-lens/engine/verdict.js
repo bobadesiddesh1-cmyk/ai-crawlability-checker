@@ -363,6 +363,24 @@
       };
     }
 
+    // Nothing was measured. Reaching the sentence below with no readable and
+    // no unreadable crawler means every one of them errored or was never run,
+    // and "they can reach it but only read part of it" would be a confident
+    // description of a page nobody looked at. Same failure as a green cloaking
+    // banner with nothing to compare: assert only what was observed.
+    if (readable.length === 0 && unreadable.length === 0) {
+      return {
+        severity: 'warn',
+        headline: 'No AI crawler could be measured on this page.',
+        detail:
+          ai.length === 0
+            ? 'No AI crawler results were produced, so there is nothing to report yet.'
+            : 'Every AI crawler check failed to complete, so nothing is known about what they can ' +
+              'read here. Re-run the check — if it keeps failing, the page may be intermittently ' +
+              'unavailable to crawlers too.'
+      };
+    }
+
     return {
       severity: 'warn',
       headline: 'AI crawlers can reach this page but only read part of it.',

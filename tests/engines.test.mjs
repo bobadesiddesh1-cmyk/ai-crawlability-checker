@@ -137,6 +137,38 @@ const envelope = diff.diffBlocks([mk('p', ctaDecorated, 0)], [mk('p', cta, 0)]);
 is(envelope.visibleCount, 1, 'a JS-injected a11y affordance does not make a block invisible');
 is(envelope.results[0].method, 'envelope', 'and it is recorded as an envelope match, not a near match');
 
+// A decoration is a fixed NUMBER of tokens, not a proportion. The first
+// version of this rule required the raw block to be 60% of the rendered one,
+// which worked on long paragraphs and failed on exactly the short CTAs and
+// headings the affordance attaches to. Every length must clear it.
+for (const base of [
+  'Personal Loan Options today',
+  'Apply now for a Personal Loan',
+  'Check your eligibility online right now today',
+  cta
+]) {
+  const decorated = base.replace(/( |$)/, '(opens in a new tab)$1');
+  const d = diff.diffBlocks([mk('p', decorated, 0)], [mk('p', base, 0)]);
+  is(d.visibleCount, 1, `a decorated ${base.split(' ').length}-token block is visible`);
+}
+
+// A four-token heading is the shortest realistic case, and an invisible
+// heading costs double in the score.
+const decoratedHeading = diff.diffBlocks(
+  [mk('h2', 'Personal Loan Options(opens in a new tab) today', 0)],
+  [mk('h2', 'Personal Loan Options today', 0)]
+);
+is(decoratedHeading.invisibleHeadings, 0, 'a decorated heading is not counted as an invisible heading');
+
+// The cap is what stops the rule swallowing real client-rendered content, so
+// pin the boundary rather than trusting it.
+const addedTokens = (n) => diff.diffBlocks(
+  [mk('p', 'Read the full guide here ' + Array.from({length: n}, (_, i) => 'extra' + i).join(' '), 0)],
+  [mk('p', 'Read the full guide here', 0)]
+).visibleCount;
+is(addedTokens(6), 1, 'six added tokens is still a decoration');
+is(addedTokens(7), 0, 'seven is not — the cap holds');
+
 // The guard. A short server-rendered fragment inside a large client-rendered
 // block must STILL be invisible — a false "visible" hides the exact failure
 // this tool exists to find, which is worse than a false alarm.
@@ -480,6 +512,32 @@ is(noPairs.headline, 'Cloaking could not be assessed.', 'the headline says so pl
 is(/all bots receive the same/i.test(noPairs.headline), false, 'it never claims all bots got the same HTML');
 is(noPairs.detail.includes('not a clean bill of health'), true, 'and the detail refuses to be read as reassurance');
 
+// Missing block data is not an empty page. Without the guard this compares as
+// 100% divergent and the tool accuses the site of cloaking on the strength of
+// data it does not have.
+const noData = cloaking.detectCloaking(
+  {
+    generic: { status: 'ok', httpStatus: 200, rawBlocks: [{ match: 'hello world' }] },
+    gptbot: { status: 'ok', httpStatus: 200, rawBlocks: null }
+  },
+  'generic',
+  { generic: 'Generic non-JS bot', gptbot: 'GPTBot' }
+);
+is(noData.detected, false, 'a bot with no extracted blocks is not a cloaking accusation');
+is(noData.skipped.length, 1, 'it is skipped, and said so');
+
+// But an extracted-and-genuinely-empty page IS the finding: serving a bot an
+// empty shell is exactly what cloaking looks like.
+const emptyShell = cloaking.detectCloaking(
+  {
+    generic: { status: 'ok', httpStatus: 200, rawBlocks: [{ match: 'hello world' }] },
+    gptbot: { status: 'ok', httpStatus: 200, rawBlocks: [] }
+  },
+  'generic',
+  { generic: 'Generic non-JS bot', gptbot: 'GPTBot' }
+);
+is(emptyShell.detected, true, 'an empty shell served to one bot is still flagged');
+
 const realPairs = cloaking.detectCloaking(
   {
     generic: { status: 'ok', httpStatus: 200, rawBlocks: [{ match: 'hello world' }] },
@@ -490,6 +548,18 @@ const realPairs = cloaking.detectCloaking(
 );
 is(realPairs.comparable, true, 'a genuine comparison is still comparable');
 is(realPairs.headline.startsWith('No cloaking detected'), true, 'and still says so when it ran clean');
+
+// Nothing measured must not be described as partial readability.
+const allErrored = verdict.summarisePage(withVerdicts([
+  { label: 'GPTBot', status: 'error', httpStatus: null, error: 'Timed out.', score: null, scoreMeaningful: false },
+  { label: 'ClaudeBot', status: 'error', httpStatus: null, error: 'Timed out.', score: null, scoreMeaningful: false }
+]));
+is(allErrored.headline, 'No AI crawler could be measured on this page.',
+   'every crawler failing is reported as unmeasured, not as partly readable');
+is(/only read part of it/.test(allErrored.headline), false,
+   'it never claims partial readability about crawlers that never ran');
+is(verdict.summarisePage([]).headline, 'No AI crawler could be measured on this page.',
+   'and an empty bot list says the same rather than asserting anything');
 
 const sFine = verdict.summarisePage(withVerdicts([
   { label: 'Googlebot', executesJs: true, score: 98 },
