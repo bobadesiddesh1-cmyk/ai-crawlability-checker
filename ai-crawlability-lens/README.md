@@ -516,44 +516,74 @@ second draft here; it would only ever disagree with what ships.
 
 **Detailed description:**
 
-> Googlebot renders your JavaScript. GPTBot, PerplexityBot and ClaudeBot don't.
+> **Rejected once for this.** The first submission listed ten framework names and eight
+> crawler names as bare comma-separated bullets. The Store flagged it under *Spam and
+> Placement — excessive keywords*, and it was right to: a run of proper nouns with no
+> sentence around it is structurally identical to keyword stuffing whatever the intent.
+> Describe the behaviour; do not enumerate the products. Three names inside a sentence is
+> prose and is fine — a list of ten is not.
+
+> Googlebot renders your JavaScript. GPTBot, PerplexityBot and ClaudeBot mostly do not.
 >
-> Your page can rank in Google, pass every SEO audit, and still be completely invisible
-> to ChatGPT, Perplexity and Claude — because those crawlers only read raw HTML. If your
-> content is client-side rendered, they see an empty shell.
+> Your page can rank in Google, pass every SEO audit, and still be invisible to AI answer
+> engines — because they read only the raw HTML your server returns. If your content is
+> drawn by JavaScript after load, they see an empty shell.
 >
-> AI Crawlability Lens fetches your page as each crawler, with each crawler's real
-> User-Agent, and shows you exactly which content never reaches them.
+> AI Crawlability Lens fetches the page you are on as each crawler, using that crawler's
+> real User-Agent, and shows you exactly which content never reaches it.
 >
 > WHAT IT CHECKS
-> • Per-bot visibility — the page fetched as Googlebot, Bingbot, GPTBot, PerplexityBot,
->   ClaudeBot and a plain-UA baseline, diffed against what you actually see
-> • robots.txt blocking — including Google-Extended, the AI-usage token that is separate
->   from Googlebot and that almost nobody knows about
-> • Server-level bot blocking — a 403 to GPTBot specifically is reported distinctly from
->   a low score
-> • Cloaking — whether your infrastructure serves different HTML to different crawlers
-> • Framework-specific fixes — Next.js Pages vs App Router, Nuxt, Gatsby, SvelteKit,
->   Remix, Astro, Angular, plain SPAs, and more
+>
+> Per-crawler visibility. Your page is fetched nine times — once as each major search and
+> AI crawler, and once with an ordinary browser User-Agent as a baseline — and each raw
+> response is compared against what you actually see on screen.
+>
+> robots.txt. Every crawler is evaluated against your rules using proper group precedence,
+> including the AI-usage tokens that are separate from the search crawler they appear
+> related to. Allowing a search engine to crawl your site does not always allow it to use
+> your content in AI answers, and that distinction surprises almost everyone.
+>
+> Server-level blocking. A refusal aimed at one crawler is reported separately from a low
+> score, because the fix is completely different.
+>
+> Cloaking. Whether your infrastructure quietly serves different HTML to different crawlers.
+>
+> Framework-aware advice. The recommendation is matched to the stack the page is actually
+> built on, so you get the specific thing to change rather than generic guidance.
 >
 > WHAT YOU GET
-> • A per-bot Visibility Score (0–100), headings weighted double
-> • A CRITICAL banner when a bot is blocked in robots.txt
-> • An on-page overlay highlighting every invisible block in red — switch between bots
->   to see the map change
-> • A standalone HTML report to send to a client or a developer
-> • History of your last 20 checks
+>
+> A visibility score out of 100 for each crawler, with headings weighted double.
+>
+> A plain-English verdict for every crawler and the reasoning behind it: blocked in
+> robots.txt, refused by your server, or simply absent from the HTML.
+>
+> An on-page overlay that outlines every invisible block in red. Switch crawlers and the
+> map redraws. It draws over the page and never modifies it.
+>
+> A self-contained HTML report to hand to a developer — one file, no external references,
+> and it makes no network requests when opened.
+>
+> A local history of your last 20 checks.
 >
 > PRIVACY
-> • 100% local. No account, no server, no telemetry, no analytics.
-> • The only requests made are to the page you're on and its robots.txt, and only when
->   you click Check.
-> • Site access is requested per-site, at the moment you click — not for all sites at
->   install time. Revoke it any time from the popup.
-> • No page content is ever stored or transmitted.
 >
-> Built for SEO and AEO professionals auditing whether their content can be cited by AI
-> answer engines — a different, and more urgent, question than "is this SSR or CSR".
+> Everything runs locally. There is no account, no server and no telemetry. The only
+> requests made are to the page you are on and its robots.txt, and only when you click
+> Check. Site access is requested per-site at the moment you click, never for all sites at
+> install time, and you can revoke it whenever you like. No page content is ever stored or
+> transmitted.
+>
+> HONEST LIMITS
+>
+> Requests come from your own IP address, not from a crawler's published address range. So
+> the robots.txt findings and the question of whether your content exists in the raw HTML
+> are exact — but treat a server refusal as a lead to confirm in your access logs, not a
+> conclusion.
+>
+> Built for search and content professionals who need to know whether their pages can be
+> cited by AI answer engines. That is a different question from whether a page is
+> server-rendered, and a more urgent one.
 
 **Permission justifications:**
 
